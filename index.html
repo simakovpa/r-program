@@ -3,707 +3,605 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Создание сметного расчета - Ремонт электросетевого оборудования</title>
+    <title>ЛСР: Ремонт электросетевого оборудования</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #64748b;
+            --success: #16a34a;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-light: #64748b;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
-            color: #333;
-            line-height: 1.6;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
 
         header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            padding: 30px 0;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        header h1 {
-            font-size: 28px;
-            font-weight: 600;
-        }
-
-        header p {
-            opacity: 0.9;
-            margin-top: 5px;
-        }
-
-        .form-section {
-            background: white;
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3498db;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
+        .header-content {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .form-group label {
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: #555;
-            font-size: 14px;
+        h1, h2, h3 { margin: 0; font-weight: 600; }
+        h1 { font-size: 1.5rem; color: var(--primary); }
+        h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+
+        .card {
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .items-table {
+        /* Form Elements */
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+        
+        select, input[type="text"], input[type="number"], input[type="date"] {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
+            padding: 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
         }
 
-        .items-table th,
-        .items-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        .items-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 13px;
-        }
-
-        .items-table tr:hover {
-            background-color: #f8f9fa;
-        }
-
+        /* Buttons */
         .btn {
-            padding: 12px 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1.2rem;
             border: none;
             border-radius: 6px;
+            font-weight: 500;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s;
+            transition: all 0.2s;
+            font-size: 0.95rem;
         }
 
-        .btn-primary {
-            background-color: #3498db;
-            color: white;
-        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { opacity: 0.9; }
 
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: var(--bg); border-color: var(--secondary); }
 
-        .btn-success {
-            background-color: #27ae60;
-            color: white;
-        }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
 
-        .btn-success:hover {
-            background-color: #229954;
-        }
+        /* Grid Layouts */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 
-        .btn-danger {
-            background-color: #e74c3c;
-            color: white;
-            padding: 8px 16px;
-            font-size: 13px;
+        /* Defect List */
+        .defect-item {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #fff;
+            transition: box-shadow 0.2s;
         }
-
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-
-        .btn-secondary {
-            background-color: #95a5a6;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #7f8c8d;
-        }
-
-        .add-item-btn {
-            margin-top: 15px;
-        }
-
-        .summary-section {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .summary-item {
-            background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 8px;
-        }
-
-        .summary-item label {
-            display: block;
-            font-size: 13px;
-            opacity: 0.9;
-            margin-bottom: 8px;
-        }
-
-        .summary-item .value {
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .actions {
+        .defect-item:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        
+        .defect-header {
             display: flex;
-            gap: 15px;
-            margin-top: 25px;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.8rem;
         }
-
-        .equipment-type-badge {
+        .defect-title { font-weight: 600; color: #dc2626; }
+        .defect-location { 
+            font-size: 0.85rem; 
+            color: var(--text-light); 
+            background: #f1f5f9; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            margin-right: 4px;
             display: inline-block;
-            padding: 4px 12px;
-            background-color: #3498db;
-            color: white;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
         }
 
-        .work-type-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background-color: #27ae60;
-            color: white;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
+        .action-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border);
         }
 
-        input[type="number"] {
-            -moz-appearance: textfield;
+        /* Table Styles */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+        th { background: #f8fafc; font-weight: 600; font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; }
+        tr:last-child td { border-bottom: none; }
+        
+        .materials-list {
+            font-size: 0.85rem;
+            background: #f8fafc;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+        }
+        .material-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            border-bottom: 1px dotted #cbd5e1;
+        }
+        .material-item:last-child { border-bottom: none; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .checkbox-group {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 0.4rem;
+            cursor: pointer;
+        }
+        .checkbox-item:hover { background: #f1f5f9; }
+        .checkbox-item input { margin-right: 0.8rem; }
+
+        .total-section {
+            text-align: right;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 2px solid var(--border);
         }
 
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        .required::after {
-            content: " *";
-            color: #e74c3c;
-        }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>⚡ Создание сметного расчета</h1>
-            <p>Ремонт и техническое обслуживание электросетевого оборудования</p>
+
+<header>
+    <div class="container header-content">
+        <h1>⚡ Локальный сметный расчет (ЛСР)</h1>
+        <div>
+            <button class="btn btn-outline" onclick="alert('Черновик сохранен!')">💾 Сохранить черновик</button>
+            <button class="btn btn-primary" style="margin-left: 10px;">🖨️ Печать / Экспорт</button>
         </div>
-    </header>
+    </div>
+</header>
 
-    <div class="container">
-        <!-- Основная информация -->
-        <div class="form-section">
-            <h2 class="section-title">📋 Общая информация</h2>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="required">Номер сметы</label>
-                    <input type="text" id="estimateNumber" placeholder="АВТ-2024-001" value="АВТ-2024-001">
-                </div>
-                <div class="form-group">
-                    <label class="required">Дата составления</label>
-                    <input type="date" id="estimateDate">
-                </div>
-                <div class="form-group">
-                    <label class="required">Заказчик</label>
-                    <input type="text" id="customer" placeholder="Наименование организации">
-                </div>
+<div class="container">
+    
+    <!-- Шаг 1: Общая информация и выбор объекта -->
+    <div class="card">
+        <h2>1. Объект ремонта</h2>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="objectSelect">Выберите объект</label>
+                <select id="objectSelect" onchange="loadDefects()">
+                    <option value="">-- Не выбрано --</option>
+                    <option value="obj1">ПС 110/10 кВ "Северная"</option>
+                    <option value="obj2">ВЛ-10 кВ фидер 5</option>
+                    <option value="obj3">ТП-452 (Гаражный кооператив)</option>
+                </select>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="required">Объект ремонта</label>
-                    <select id="facility">
-                        <option value="">Выберите объект</option>
-                        <option value="tps">Трансформаторная подстанция</option>
-                        <option value="rpp">Распределительный пункт питания</option>
-                        <option value="vl">Воздушная линия электропередачи</option>
-                        <option value="kl">Кабельная линия электропередачи</option>
-                        <option value="ru">Распределительное устройство</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="required">Адрес объекта</label>
-                    <input type="text" id="address" placeholder="Местоположение объекта">
-                </div>
-                <div class="form-group">
-                    <label>Ответственный исполнитель</label>
-                    <input type="text" id="contractor" placeholder="ФИО ответственного">
-                </div>
+            <div class="form-group">
+                <label>Дата осмотра</label>
+                <input type="date" value="2023-10-25">
             </div>
-        </div>
-
-        <!-- Оборудование -->
-        <div class="form-section">
-            <h2 class="section-title">🔌 Электросетевое оборудование</h2>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="required">Тип оборудования</label>
-                    <select id="equipmentType">
-                        <option value="">Выберите тип оборудования</option>
-                        <option value="transformer">Силовой трансформатор</option>
-                        <option value="disconnector">Разъединитель</option>
-                        <option value="circuit_breaker">Выключатель автоматический</option>
-                        <option value="load_switch">Выключатель нагрузки</option>
-                        <option value="arrester">Разрядник/Ограничитель перенапряжений</option>
-                        <option value="current_transformer">Трансформатор тока</option>
-                        <option value="voltage_transformer">Трансформатор напряжения</option>
-                        <option value="cable">Кабель силовой</option>
-                        <option value="busbar">Шина токопроводящая</option>
-                        <option value="support">Опора ЛЭП</option>
-                        <option value="lightning_rod">Молниезащита</option>
-                        <option value="grounding">Заземляющее устройство</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="required">Марка/Модель</label>
-                    <input type="text" id="equipmentModel" placeholder="Например: ТМГ-100/10">
-                </div>
-                <div class="form-group">
-                    <label>Единица измерения</label>
-                    <select id="unit">
-                        <option value="шт">шт</option>
-                        <option value="м">м</option>
-                        <option value="км">км</option>
-                        <option value="комплект">комплект</option>
-                        <option value="секция">секция</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Количество</label>
-                    <input type="number" id="quantity" min="1" value="1" step="1">
-                </div>
-                <div class="form-group">
-                    <label>Техническое состояние</label>
-                    <select id="condition">
-                        <option value="">Выберите состояние</option>
-                        <option value="good">Исправное</option>
-                        <option value="requires_repair">Требует ремонта</option>
-                        <option value="critical">Критическое</option>
-                        <option value="replace">Подлежит замене</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Виды работ -->
-        <div class="form-section">
-            <h2 class="section-title">🛠️ Виды работ и материалы</h2>
-            
-            <table class="items-table" id="worksTable">
-                <thead>
-                    <tr>
-                        <th style="width: 5%">№</th>
-                        <th style="width: 35%">Наименование работы/материала</th>
-                        <th style="width: 15%">Тип</th>
-                        <th style="width: 10%">Ед. изм.</th>
-                        <th style="width: 10%">Кол-во</th>
-                        <th style="width: 12%">Цена (руб.)</th>
-                        <th style="width: 12%">Сумма (руб.)</th>
-                        <th style="width: 5%"></th>
-                    </tr>
-                </thead>
-                <tbody id="worksBody">
-                    <!-- Строки будут добавлены через JS -->
-                </tbody>
-            </table>
-
-            <button class="btn btn-primary add-item-btn" onclick="addWorkItem()">
-                + Добавить позицию
-            </button>
-        </div>
-
-        <!-- Итоговая смета -->
-        <div class="form-section summary-section">
-            <h2 class="section-title" style="color: white; border-bottom-color: rgba(255,255,255,0.3);">💰 Сводная смета</h2>
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <label>Стоимость работ</label>
-                    <div class="value" id="totalWorks">0 ₽</div>
-                </div>
-                <div class="summary-item">
-                    <label>Стоимость материалов</label>
-                    <div class="value" id="totalMaterials">0 ₽</div>
-                </div>
-                <div class="summary-item">
-                    <label>Накладные расходы</label>
-                    <div class="value" id="overhead">0 ₽</div>
-                </div>
-                <div class="summary-item">
-                    <label>НДС (20%)</label>
-                    <div class="value" id="vat">0 ₽</div>
-                </div>
-                <div class="summary-item" style="background: rgba(46, 204, 113, 0.3);">
-                    <label>ИТОГО</label>
-                    <div class="value" id="grandTotal">0 ₽</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Дополнительные параметры -->
-        <div class="form-section">
-            <h2 class="section-title">⚙️ Параметры расчета</h2>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Накладные расходы (%)</label>
-                    <input type="number" id="overheadPercent" min="0" max="100" value="15" step="1">
-                </div>
-                <div class="form-group">
-                    <label>Применить районный коэффициент</label>
-                    <select id="regionalCoefficient">
-                        <option value="1">Нет</option>
-                        <option value="1.15">1.15</option>
-                        <option value="1.2">1.20</option>
-                        <option value="1.25">1.25</option>
-                        <option value="1.3">1.30</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Срок выполнения работ</label>
-                    <input type="text" id="duration" placeholder="Например: 10 рабочих дней">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group" style="grid-column: 1 / -1;">
-                    <label>Комментарии и особые условия</label>
-                    <textarea id="comments" placeholder="Дополнительная информация, требования к безопасности, специальные условия..."></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Кнопки действий -->
-        <div class="actions">
-            <button class="btn btn-secondary" onclick="clearForm()">Очистить</button>
-            <button class="btn btn-primary" onclick="saveDraft()">Сохранить черновик</button>
-            <button class="btn btn-success" onclick="generateEstimate()">Сформировать смету</button>
         </div>
     </div>
 
-    <script>
-        let workItems = [];
-        let itemId = 0;
+    <!-- Шаг 2: Дефектная ведомость -->
+    <div class="card hidden" id="defectsSection">
+        <h2>2. Выявленные дефекты и мероприятия</h2>
+        <p style="color: var(--text-light); margin-bottom: 1rem;">Выберите мероприятие для устранения дефекта и добавьте его в смету.</p>
+        <div id="defectsList">
+            <!-- Сюда будут генерироваться дефекты через JS -->
+        </div>
+    </div>
 
-        // Установка текущей даты
-        document.getElementById('estimateDate').valueAsDate = new Date();
+    <!-- Шаг 3: Итоговая смета -->
+    <div class="card hidden" id="estimateSection">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>3. Локальный сметный расчет</h2>
+            <button class="btn btn-outline btn-sm" onclick="clearEstimate()">Очистить смету</button>
+        </div>
+        
+        <table id="estimateTable">
+            <thead>
+                <tr>
+                    <th style="width: 5%">№</th>
+                    <th style="width: 30%">Наименование работ / Затрат</th>
+                    <th style="width: 10%">Ед.</th>
+                    <th style="width: 10%">Кол-во</th>
+                    <th style="width: 15%">Трудозатраты (чел-час)</th>
+                    <th style="width: 15%">Механизмы (маш-час)</th>
+                    <th style="width: 15%">Стоимость (руб)</th>
+                </tr>
+            </thead>
+            <tbody id="estimateBody">
+                <!-- Строки сметы -->
+            </tbody>
+        </table>
 
-        // Пример данных для демонстрации
-        const sampleWorks = [
-            { name: 'Диагностика оборудования', type: 'work', unit: 'час', quantity: 8, price: 1500 },
-            { name: 'Демонтаж старого оборудования', type: 'work', unit: 'шт', quantity: 1, price: 5000 },
-            { name: 'Монтаж нового оборудования', type: 'work', unit: 'шт', quantity: 1, price: 8000 },
-            { name: 'Трансформатор ТМГ-100/10', type: 'material', unit: 'шт', quantity: 1, price: 85000 },
-            { name: 'Кабель силовой АВВГ 3х120', type: 'material', unit: 'м', quantity: 50, price: 450 },
-            { name: 'Испытания и пусконаладочные работы', type: 'work', unit: 'комплект', quantity: 1, price: 15000 }
-        ];
+        <div class="total-section">
+            Итого по смете: <span id="grandTotal">0</span> руб.
+        </div>
+    </div>
 
-        // Инициализация с примерами
-        function init() {
-            sampleWorks.forEach(work => {
-                addWorkItem(work.name, work.type, work.unit, work.quantity, work.price);
-            });
-            calculateTotals();
+</div>
+
+<!-- Модальное окно выбора технических мест -->
+<div class="modal-overlay" id="locationModal">
+    <div class="modal">
+        <h3>Выберите технические места</h3>
+        <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">Дефект обнаружен в нескольких местах. Выберите где применять мероприятие:</p>
+        
+        <div class="checkbox-group" id="modalCheckboxList">
+            <!-- Чекбоксы -->
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1rem;">
+            <button class="btn btn-outline" onclick="closeModal()">Отмена</button>
+            <button class="btn btn-primary" id="confirmLocationBtn">Добавить выбранные</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- ДАННЫЕ (Mock Data) ---
+    
+    // Справочник мероприятий и ресурсов
+    const activitiesDB = {
+        'act_transformer_oil': {
+            name: 'Замена масла в трансформаторе',
+            unit: 'шт',
+            laborPerUnit: 12.5, // чел-час
+            mechPerUnit: 4.0,   // маш-час (автовышка + масловоз)
+            basePrice: 15000,   // стоимость работ без материалов
+            materials: [
+                { name: 'Масло трансформаторное ГК', qty: 1.2, unit: 'тонн', price: 120000 },
+                { name: 'Прокладки уплотнительные', qty: 5, unit: 'компл', price: 500 }
+            ]
+        },
+        'act_switch_clean': {
+            name: 'Ревизия и чистка контактов выключателя',
+            unit: 'шт',
+            laborPerUnit: 4.0,
+            mechPerUnit: 2.0,
+            basePrice: 3500,
+            materials: [
+                { name: 'Смазка электропроводная', qty: 0.1, unit: 'кг', price: 2000 },
+                { name: 'Ветошь обтирочная', qty: 0.5, unit: 'кг', price: 100 }
+            ]
+        },
+        'act_insulator_replace': {
+            name: 'Замена изолятора штыревого',
+            unit: 'шт',
+            laborPerUnit: 1.5,
+            mechPerUnit: 1.0,
+            basePrice: 1200,
+            materials: [
+                { name: 'Изолятор ШФ-20Г', qty: 1, unit: 'шт', price: 850 },
+                { name: 'Проволока вязальная', qty: 0.2, unit: 'кг', price: 300 }
+            ]
+        },
+        'act_line_clear': {
+            name: 'Расчистка трассы ВЛ от поросли',
+            unit: 'км',
+            laborPerUnit: 8.0,
+            mechPerUnit: 3.0,
+            basePrice: 5000,
+            materials: []
+        }
+    };
+
+    // Дефекты привязанные к объектам
+    const defectsData = {
+        'obj1': [
+            { 
+                id: 'd1', 
+                title: 'Ухудшение качества масла в Т-1', 
+                locations: ['Трансформатор Т-1'], 
+                defaultActivity: 'act_transformer_oil' 
+            },
+            { 
+                id: 'd2', 
+                title: 'Нагрев контактных соединений', 
+                locations: ['Выключатель ВВ-10 №1', 'Выключатель ВВ-10 №2', 'Разъединитель РЛНД-10'], 
+                defaultActivity: 'act_switch_clean' 
+            }
+        ],
+        'obj2': [
+            { 
+                id: 'd3', 
+                title: 'Бой изоляторов на опорах 12-15', 
+                locations: ['Опора №12', 'Опора №13', 'Опора №14', 'Опора №15'], 
+                defaultActivity: 'act_insulator_replace' 
+            },
+            { 
+                id: 'd4', 
+                title: 'Зарастание трассы ВЛ', 
+                locations: ['Участок км 0.0 - км 2.5'], 
+                defaultActivity: 'act_line_clear' 
+            }
+        ],
+        'obj3': [
+             { 
+                id: 'd5', 
+                title: 'Коррозия корпуса РУ-0.4 кВ', 
+                locations: ['Ячейка ввода', 'Ячейка секционного'], 
+                defaultActivity: 'act_switch_clean'
+            }
+        ]
+    };
+
+    // Состояние приложения
+    let currentEstimate = [];
+
+    // --- ЛОГИКА ---
+
+    function loadDefects() {
+        const objId = document.getElementById('objectSelect').value;
+        const defectsContainer = document.getElementById('defectsList');
+        const defectsSection = document.getElementById('defectsSection');
+        const estimateSection = document.getElementById('estimateSection');
+
+        defectsContainer.innerHTML = '';
+        currentEstimate = [];
+        updateEstimateTable();
+
+        if (!objId) {
+            defectsSection.classList.add('hidden');
+            estimateSection.classList.add('hidden');
+            return;
         }
 
-        function addWorkItem(name = '', type = 'work', unit = 'шт', quantity = 1, price = 0) {
-            itemId++;
-            const item = {
-                id: itemId,
-                name: name,
-                type: type,
-                unit: unit,
-                quantity: quantity,
-                price: price
-            };
-            workItems.push(item);
-            renderWorkItem(item);
-            calculateTotals();
+        defectsSection.classList.remove('hidden');
+        estimateSection.classList.remove('hidden');
+
+        const defects = defectsData[objId] || [];
+        
+        if (defects.length === 0) {
+            defectsContainer.innerHTML = '<p>Дефектов для данного объекта не найдено.</p>';
+            return;
         }
 
-        function renderWorkItem(item) {
-            const tbody = document.getElementById('worksBody');
-            const row = document.createElement('tr');
-            row.id = `row-${item.id}`;
+        defects.forEach(defect => {
+            const card = document.createElement('div');
+            card.className = 'defect-item';
             
-            const sum = item.quantity * item.price;
-            const typeBadge = item.type === 'work' 
-                ? '<span class="work-type-badge">Работа</span>' 
-                : '<span class="equipment-type-badge">Материал</span>';
+            // Генерация опций мероприятий
+            let optionsHtml = '';
+            for (const [key, val] of Object.entries(activitiesDB)) {
+                const selected = key === defect.defaultActivity ? 'selected' : '';
+                optionsHtml += `<option value="${key}" ${selected}>${val.name}</option>`;
+            }
 
-            row.innerHTML = `
-                <td>${item.id}</td>
+            card.innerHTML = `
+                <div class="defect-header">
+                    <div>
+                        <div class="defect-title">${defect.title}</div>
+                        <div style="margin-top:4px;">
+                            ${defect.locations.map(l => `<span class="defect-location">${l}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="action-row">
+                    <div style="flex-grow: 1;">
+                        <label style="font-size: 0.8rem; margin-bottom: 2px;">Мероприятие:</label>
+                        <select id="activity-${defect.id}">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                    <button class="btn btn-success" onclick="prepareAddToEstimate('${defect.id}')">
+                        + Добавить в ЛСР
+                    </button>
+                </div>
+            `;
+            defectsContainer.appendChild(card);
+        });
+    }
+
+    function prepareAddToEstimate(defectId) {
+        const objId = document.getElementById('objectSelect').value;
+        const defect = defectsData[objId].find(d => d.id === defectId);
+        const activityKey = document.getElementById(`activity-${defectId}`).value;
+        
+        // Если тех. место одно, добавляем сразу
+        if (defect.locations.length === 1) {
+            addToEstimateLogic(activityKey, [defect.locations[0]]);
+        } else {
+            // Если много, открываем модалку
+            openLocationModal(defect.locations, activityKey);
+        }
+    }
+
+    // --- МОДАЛЬНОЕ ОКНО ---
+    function openLocationModal(locations, activityKey) {
+        const modal = document.getElementById('locationModal');
+        const list = document.getElementById('modalCheckboxList');
+        const confirmBtn = document.getElementById('confirmLocationBtn');
+        
+        list.innerHTML = '';
+        
+        // Кнопка "Выбрать все"
+        const selectAllDiv = document.createElement('div');
+        selectAllDiv.style.marginBottom = '10px';
+        selectAllDiv.innerHTML = `<label class="checkbox-item"><input type="checkbox" id="selectAllLoc" onchange="toggleSelectAll(this)"> <b>Выбрать все (${locations.length})</b></label>`;
+        list.appendChild(selectAllDiv);
+
+        locations.forEach((loc, index) => {
+            const div = document.createElement('div');
+            div.className = 'checkbox-item';
+            div.innerHTML = `
+                <input type="checkbox" class="loc-checkbox" value="${loc}" checked>
+                <span>${loc}</span>
+            `;
+            list.appendChild(div);
+        });
+
+        confirmBtn.onclick = () => {
+            const checkboxes = document.querySelectorAll('.loc-checkbox:checked');
+            const selected = Array.from(checkboxes).map(cb => cb.value);
+            if (selected.length > 0) {
+                addToEstimateLogic(activityKey, selected);
+                closeModal();
+            } else {
+                alert('Выберите хотя бы одно место');
+            }
+        };
+
+        modal.style.display = 'flex';
+    }
+
+    function toggleSelectAll(source) {
+        const checkboxes = document.querySelectorAll('.loc-checkbox');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+    }
+
+    function closeModal() {
+        document.getElementById('locationModal').style.display = 'none';
+    }
+
+    // --- ДОБАВЛЕНИЕ В СМЕТУ ---
+    function addToEstimateLogic(activityKey, locations) {
+        const activity = activitiesDB[activityKey];
+        const quantity = locations.length;
+        
+        const newItem = {
+            id: Date.now(),
+            name: activity.name,
+            unit: activity.unit,
+            qty: quantity,
+            laborTotal: activity.laborPerUnit * quantity,
+            mechTotal: activity.mechPerUnit * quantity,
+            workCost: activity.basePrice * quantity,
+            materials: activity.materials.map(m => ({
+                ...m,
+                totalQty: m.qty * quantity,
+                totalCost: m.price * m.qty * quantity
+            })),
+            locations: locations
+        };
+
+        currentEstimate.push(newItem);
+        updateEstimateTable();
+        
+        // Скролл к смете
+        document.getElementById('estimateSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function updateEstimateTable() {
+        const tbody = document.getElementById('estimateBody');
+        tbody.innerHTML = '';
+        let grandTotal = 0;
+
+        currentEstimate.forEach((item, index) => {
+            // Расчет стоимости материалов
+            let materialsHtml = '';
+            let materialsCostSum = 0;
+            
+            item.materials.forEach(mat => {
+                materialsCostSum += mat.totalCost;
+                materialsHtml += `
+                    <div class="material-item">
+                        <span>${mat.name} (${mat.totalQty} ${mat.unit})</span>
+                        <span>${mat.totalCost.toLocaleString()} ₽</span>
+                    </div>
+                `;
+            });
+
+            const totalRowCost = item.workCost + materialsCostSum;
+            grandTotal += totalRowCost;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
                 <td>
-                    <input type="text" 
-                           value="${item.name}" 
-                           onchange="updateItem(${item.id}, 'name', this.value)"
-                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <div style="font-weight:600;">${item.name}</div>
+                    <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">Объекты: ${item.locations.join(', ')}</div>
+                    ${materialsHtml ? `<div class="materials-list">${materialsHtml}</div>` : ''}
                 </td>
+                <td>${item.unit}</td>
+                <td>${item.qty}</td>
+                <td>${item.laborTotal.toFixed(1)}</td>
+                <td>${item.mechTotal.toFixed(1)}</td>
                 <td>
-                    <select onchange="updateItem(${item.id}, 'type', this.value)"
-                            style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="work" ${item.type === 'work' ? 'selected' : ''}>Работа</option>
-                        <option value="material" ${item.type === 'material' ? 'selected' : ''}>Материал</option>
-                    </select>
-                </td>
-                <td>
-                    <select onchange="updateItem(${item.id}, 'unit', this.value)"
-                            style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="шт" ${item.unit === 'шт' ? 'selected' : ''}>шт</option>
-                        <option value="м" ${item.unit === 'м' ? 'selected' : ''}>м</option>
-                        <option value="км" ${item.unit === 'км' ? 'selected' : ''}>км</option>
-                        <option value="час" ${item.unit === 'час' ? 'selected' : ''}>час</option>
-                        <option value="комплект" ${item.unit === 'комплект' ? 'selected' : ''}>комплект</option>
-                    </select>
-                </td>
-                <td>
-                    <input type="number" 
-                           value="${item.quantity}" 
-                           min="1"
-                           step="0.01"
-                           onchange="updateItem(${item.id}, 'quantity', this.value)"
-                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                </td>
-                <td>
-                    <input type="number" 
-                           value="${item.price}" 
-                           min="0"
-                           step="0.01"
-                           onchange="updateItem(${item.id}, 'price', this.value)"
-                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                </td>
-                <td><strong>${formatCurrency(sum)}</strong></td>
-                <td>
-                    <button class="btn btn-danger" onclick="removeItem(${item.id})">×</button>
+                    <div>${item.workCost.toLocaleString()}</div>
+                    <div style="font-size:0.8rem; color:#16a34a; margin-top:4px;">+ Мат: ${materialsCostSum.toLocaleString()}</div>
+                    <div style="font-weight:bold; border-top:1px solid #ddd; margin-top:6px; padding-top:4px;">${totalRowCost.toLocaleString()}</div>
                 </td>
             `;
-            
-            tbody.appendChild(row);
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('grandTotal').innerText = grandTotal.toLocaleString();
+    }
+
+    function clearEstimate() {
+        if(confirm('Очистить всю смету?')) {
+            currentEstimate = [];
+            updateEstimateTable();
         }
+    }
 
-        function updateItem(id, field, value) {
-            const item = workItems.find(i => i.id === id);
-            if (item) {
-                if (field === 'quantity' || field === 'price') {
-                    item[field] = parseFloat(value) || 0;
-                } else {
-                    item[field] = value;
-                }
-                recalculateRow(id);
-                calculateTotals();
-            }
-        }
+</script>
 
-        function recalculateRow(id) {
-            const item = workItems.find(i => i.id === id);
-            const row = document.getElementById(`row-${id}`);
-            if (item && row) {
-                const sum = item.quantity * item.price;
-                row.cells[6].innerHTML = `<strong>${formatCurrency(sum)}</strong>`;
-            }
-        }
-
-        function removeItem(id) {
-            workItems = workItems.filter(i => i.id !== id);
-            const row = document.getElementById(`row-${id}`);
-            if (row) {
-                row.remove();
-            }
-            renumberItems();
-            calculateTotals();
-        }
-
-        function renumberItems() {
-            workItems.forEach((item, index) => {
-                item.id = index + 1;
-                const row = document.getElementById(`row-${index + 1}`);
-                if (row) {
-                    row.cells[0].textContent = item.id;
-                }
-            });
-            itemId = workItems.length;
-        }
-
-        function calculateTotals() {
-            let totalWorks = 0;
-            let totalMaterials = 0;
-
-            workItems.forEach(item => {
-                const sum = item.quantity * item.price;
-                if (item.type === 'work') {
-                    totalWorks += sum;
-                } else {
-                    totalMaterials += sum;
-                }
-            });
-
-            const overheadPercent = parseFloat(document.getElementById('overheadPercent').value) || 0;
-            const regionalCoeff = parseFloat(document.getElementById('regionalCoefficient').value) || 1;
-            
-            const subtotal = (totalWorks + totalMaterials) * regionalCoeff;
-            const overhead = subtotal * (overheadPercent / 100);
-            const vatBase = subtotal + overhead;
-            const vat = vatBase * 0.20;
-            const grandTotal = vatBase + vat;
-
-            document.getElementById('totalWorks').textContent = formatCurrency(totalWorks * regionalCoeff);
-            document.getElementById('totalMaterials').textContent = formatCurrency(totalMaterials * regionalCoeff);
-            document.getElementById('overhead').textContent = formatCurrency(overhead);
-            document.getElementById('vat').textContent = formatCurrency(vat);
-            document.getElementById('grandTotal').textContent = formatCurrency(grandTotal);
-        }
-
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('ru-RU', {
-                style: 'currency',
-                currency: 'RUB',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 2
-            }).format(amount);
-        }
-
-        function clearForm() {
-            if (confirm('Вы уверены, что хотите очистить форму?')) {
-                workItems = [];
-                document.getElementById('worksBody').innerHTML = '';
-                document.querySelectorAll('input:not([type="date"]), select, textarea').forEach(input => {
-                    if (input.id !== 'overheadPercent' && input.id !== 'regionalCoefficient') {
-                        input.value = '';
-                    }
-                });
-                document.getElementById('estimateDate').valueAsDate = new Date();
-                document.getElementById('overheadPercent').value = '15';
-                document.getElementById('regionalCoefficient').value = '1';
-                calculateTotals();
-            }
-        }
-
-        function saveDraft() {
-            const data = collectFormData();
-            localStorage.setItem('estimateDraft', JSON.stringify(data));
-            alert('Черновик сохранен!');
-        }
-
-        function loadDraft() {
-            const draft = localStorage.getItem('estimateDraft');
-            if (draft) {
-                const data = JSON.parse(draft);
-                // Загрузка данных из черновика
-                console.log('Загрузка черновика:', data);
-            }
-        }
-
-        function generateEstimate() {
-            const data = collectFormData();
-            
-            // Валидация
-            if (!data.estimateNumber || !data.customer || !data.facility) {
-                alert('Пожалуйста, заполните обязательные поля!');
-                return;
-            }
-
-            if (workItems.length === 0) {
-                alert('Добавьте хотя бы одну позицию в смету!');
-                return;
-            }
-
-            // Генерация отчета
-            console.log('Формирование сметы:', data);
-            console.log('Позиции сметы:', workItems);
-            
-            alert(`Смета №${data.estimateNumber} сформирована!\nИтого: ${document.getElementById('grandTotal').textContent}`);
-            
-            // Здесь можно добавить экспорт в PDF или отправку на сервер
-        }
-
-        function collectFormData() {
-            return {
-                estimateNumber: document.getElementById('estimateNumber').value,
-                estimateDate: document.getElementById('estimateDate').value,
-                customer: document.getElementById('customer').value,
-                facility: document.getElementById('facility').value,
-                address: document.getElementById('address').value,
-                contractor: document.getElementById('contractor').value,
-                equipmentType: document.getElementById('equipmentType').value,
-                equipmentModel: document.getElementById('equipmentModel').value,
-                condition: document.getElementById('condition').value,
-                overheadPercent: document.getElementById('overheadPercent').value,
-                regionalCoefficient: document.getElementById('regionalCoefficient').value,
-                duration: document.getElementById('duration').value,
-                comments: document.getElementById('comments').value
-            };
-        }
-
-        // Обработчики изменений параметров
-        document.getElementById('overheadPercent').addEventListener('change', calculateTotals);
-        document.getElementById('regionalCoefficient').addEventListener('change', calculateTotals);
-
-        // Инициализация при загрузке
-        init();
-    </script>
 </body>
 </html>
