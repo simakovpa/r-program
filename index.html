@@ -10,6 +10,7 @@
             --primary-hover: #1d4ed8;
             --secondary: #64748b;
             --success: #16a34a;
+            --danger: #dc2626;
             --bg: #f8fafc;
             --surface: #ffffff;
             --border: #e2e8f0;
@@ -38,6 +39,9 @@
             padding: 1rem 0;
             margin-bottom: 2rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .header-content {
@@ -91,6 +95,7 @@
             cursor: pointer;
             transition: all 0.2s;
             font-size: 0.95rem;
+            gap: 6px;
         }
 
         .btn-primary { background: var(--primary); color: white; }
@@ -99,10 +104,14 @@
         .btn-success { background: var(--success); color: white; }
         .btn-success:hover { opacity: 0.9; }
 
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { opacity: 0.9; }
+
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
         .btn-outline:hover { background: var(--bg); border-color: var(--secondary); }
 
         .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+        .btn-icon { padding: 0.4rem; min-width: 32px; }
 
         /* Grid Layouts */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
@@ -150,20 +159,21 @@
         th { background: #f8fafc; font-weight: 600; font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; }
         tr:last-child td { border-bottom: none; }
         
-        .materials-list {
+        .materials-preview {
             font-size: 0.85rem;
             background: #f8fafc;
             padding: 0.5rem;
             border-radius: 4px;
             margin-top: 0.5rem;
+            max-height: 100px;
+            overflow-y: auto;
         }
-        .material-item {
+        .material-preview-item {
             display: flex;
             justify-content: space-between;
             padding: 2px 0;
             border-bottom: 1px dotted #cbd5e1;
         }
-        .material-item:last-child { border-bottom: none; }
 
         /* Modal */
         .modal-overlay {
@@ -173,16 +183,19 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            backdrop-filter: blur(2px);
         }
         .modal {
             background: white;
             padding: 2rem;
             border-radius: 8px;
             width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
+            max-width: 800px;
+            max-height: 90vh;
             overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
+        
         .checkbox-group {
             max-height: 200px;
             overflow-y: auto;
@@ -210,6 +223,24 @@
         }
 
         .hidden { display: none; }
+
+        /* Materials Editor Specifics */
+        .mat-editor-table input {
+            padding: 0.4rem;
+            font-size: 0.9rem;
+        }
+        .mat-editor-table td {
+            vertical-align: middle;
+        }
+        .add-material-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 10px;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            align-items: end;
+        }
     </style>
 </head>
 <body>
@@ -218,8 +249,8 @@
     <div class="container header-content">
         <h1>⚡ Локальный сметный расчет (ЛСР)</h1>
         <div>
-            <button class="btn btn-outline" onclick="alert('Черновик сохранен!')">💾 Сохранить черновик</button>
-            <button class="btn btn-primary" style="margin-left: 10px;">🖨️ Печать / Экспорт</button>
+            <button class="btn btn-outline" onclick="alert('Черновик сохранен в локальное хранилище!')">💾 Сохранить</button>
+            <button class="btn btn-primary" style="margin-left: 10px;" onclick="window.print()">🖨️ Печать</button>
         </div>
     </div>
 </header>
@@ -297,8 +328,65 @@
         </div>
         
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1rem;">
-            <button class="btn btn-outline" onclick="closeModal()">Отмена</button>
+            <button class="btn btn-outline" onclick="closeModal('locationModal')">Отмена</button>
             <button class="btn btn-primary" id="confirmLocationBtn">Добавить выбранные</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования материалов -->
+<div class="modal-overlay" id="materialsModal">
+    <div class="modal">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 id="matModalTitle">Редактирование материалов</h3>
+            <button class="btn btn-outline btn-sm" onclick="closeModal('materialsModal')">✕</button>
+        </div>
+        
+        <p style="font-size: 0.9rem; color: var(--text-light);">Измените количество или цену материалов. Сумма пересчитается автоматически.</p>
+
+        <table class="mat-editor-table">
+            <thead>
+                <tr>
+                    <th>Наименование</th>
+                    <th style="width: 80px">Кол-во</th>
+                    <th style="width: 80px">Ед.</th>
+                    <th style="width: 100px">Цена (₽)</th>
+                    <th style="width: 100px">Сумма (₽)</th>
+                    <th style="width: 50px"></th>
+                </tr>
+            </thead>
+            <tbody id="materialsEditorBody">
+                <!-- Строки редактора -->
+            </tbody>
+        </table>
+
+        <div class="add-material-row">
+            <div>
+                <label style="font-size:0.8rem">Наименование</label>
+                <input type="text" id="newMatName" placeholder="Например: Болт М12">
+            </div>
+            <div>
+                <label style="font-size:0.8rem">Кол-во</label>
+                <input type="number" id="newMatQty" value="1" step="0.1">
+            </div>
+            <div>
+                <label style="font-size:0.8rem">Ед.</label>
+                <input type="text" id="newMatUnit" value="шт">
+            </div>
+            <div>
+                <label style="font-size:0.8rem">Цена</label>
+                <input type="number" id="newMatPrice" value="0">
+            </div>
+            <button class="btn btn-success" style="height: 42px;" onclick="addNewMaterialRow()">+ Добавить</button>
+        </div>
+        <!-- Доп поле цены за единицу работы, если нужно, но пока опустим для простоты -->
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+            <div style="margin-right: auto; font-weight: bold; font-size: 1.1rem;">
+                Итого материалов: <span id="matModalTotal">0</span> ₽
+            </div>
+            <button class="btn btn-outline" onclick="closeModal('materialsModal')">Отмена</button>
+            <button class="btn btn-primary" onclick="saveMaterialsChanges()">Сохранить изменения</button>
         </div>
     </div>
 </div>
@@ -306,14 +394,13 @@
 <script>
     // --- ДАННЫЕ (Mock Data) ---
     
-    // Справочник мероприятий и ресурсов
     const activitiesDB = {
         'act_transformer_oil': {
             name: 'Замена масла в трансформаторе',
             unit: 'шт',
-            laborPerUnit: 12.5, // чел-час
-            mechPerUnit: 4.0,   // маш-час (автовышка + масловоз)
-            basePrice: 15000,   // стоимость работ без материалов
+            laborPerUnit: 12.5,
+            mechPerUnit: 4.0,
+            basePrice: 15000,
             materials: [
                 { name: 'Масло трансформаторное ГК', qty: 1.2, unit: 'тонн', price: 120000 },
                 { name: 'Прокладки уплотнительные', qty: 5, unit: 'компл', price: 500 }
@@ -351,50 +438,24 @@
         }
     };
 
-    // Дефекты привязанные к объектам
     const defectsData = {
         'obj1': [
-            { 
-                id: 'd1', 
-                title: 'Ухудшение качества масла в Т-1', 
-                locations: ['Трансформатор Т-1'], 
-                defaultActivity: 'act_transformer_oil' 
-            },
-            { 
-                id: 'd2', 
-                title: 'Нагрев контактных соединений', 
-                locations: ['Выключатель ВВ-10 №1', 'Выключатель ВВ-10 №2', 'Разъединитель РЛНД-10'], 
-                defaultActivity: 'act_switch_clean' 
-            }
+            { id: 'd1', title: 'Ухудшение качества масла в Т-1', locations: ['Трансформатор Т-1'], defaultActivity: 'act_transformer_oil' },
+            { id: 'd2', title: 'Нагрев контактных соединений', locations: ['Выключатель ВВ-10 №1', 'Выключатель ВВ-10 №2', 'Разъединитель РЛНД-10'], defaultActivity: 'act_switch_clean' }
         ],
         'obj2': [
-            { 
-                id: 'd3', 
-                title: 'Бой изоляторов на опорах 12-15', 
-                locations: ['Опора №12', 'Опора №13', 'Опора №14', 'Опора №15'], 
-                defaultActivity: 'act_insulator_replace' 
-            },
-            { 
-                id: 'd4', 
-                title: 'Зарастание трассы ВЛ', 
-                locations: ['Участок км 0.0 - км 2.5'], 
-                defaultActivity: 'act_line_clear' 
-            }
+            { id: 'd3', title: 'Бой изоляторов на опорах 12-15', locations: ['Опора №12', 'Опора №13', 'Опора №14', 'Опора №15'], defaultActivity: 'act_insulator_replace' },
+            { id: 'd4', title: 'Зарастание трассы ВЛ', locations: ['Участок км 0.0 - км 2.5'], defaultActivity: 'act_line_clear' }
         ],
         'obj3': [
-             { 
-                id: 'd5', 
-                title: 'Коррозия корпуса РУ-0.4 кВ', 
-                locations: ['Ячейка ввода', 'Ячейка секционного'], 
-                defaultActivity: 'act_switch_clean'
-            }
+             { id: 'd5', title: 'Коррозия корпуса РУ-0.4 кВ', locations: ['Ячейка ввода', 'Ячейка секционного'], defaultActivity: 'act_switch_clean' }
         ]
     };
 
-    // Состояние приложения
     let currentEstimate = [];
+    let currentEditingItemId = null; // ID элемента, который сейчас редактируется в модальном окне
 
-    // --- ЛОГИКА ---
+    // --- ЛОГИКА ОТРИСОВКИ ДЕФЕКТОВ ---
 
     function loadDefects() {
         const objId = document.getElementById('objectSelect').value;
@@ -403,12 +464,12 @@
         const estimateSection = document.getElementById('estimateSection');
 
         defectsContainer.innerHTML = '';
-        currentEstimate = [];
-        updateEstimateTable();
+        // Не очищаем смету при смене объекта, чтобы можно было собрать смету по нескольким объектам, 
+        // но для простоты прототипа оставим как есть или можно очистить. 
+        // Оставим как есть, чтобы не терять данные случайно.
 
         if (!objId) {
             defectsSection.classList.add('hidden');
-            estimateSection.classList.add('hidden');
             return;
         }
 
@@ -426,7 +487,6 @@
             const card = document.createElement('div');
             card.className = 'defect-item';
             
-            // Генерация опций мероприятий
             let optionsHtml = '';
             for (const [key, val] of Object.entries(activitiesDB)) {
                 const selected = key === defect.defaultActivity ? 'selected' : '';
@@ -463,24 +523,20 @@
         const defect = defectsData[objId].find(d => d.id === defectId);
         const activityKey = document.getElementById(`activity-${defectId}`).value;
 
-        // Если тех. место одно, добавляем сразу
         if (defect.locations.length === 1) {
             addToEstimateLogic(activityKey, [defect.locations[0]]);
         } else {
-            // Если много, открываем модалку
             openLocationModal(defect.locations, activityKey);
         }
     }
 
-    // --- МОДАЛЬНОЕ ОКНО ---
+    // --- МОДАЛЬНОЕ ОКНО ВЫБОРА МЕСТ ---
     function openLocationModal(locations, activityKey) {
         const modal = document.getElementById('locationModal');
         const list = document.getElementById('modalCheckboxList');
         const confirmBtn = document.getElementById('confirmLocationBtn');
 
         list.innerHTML = '';
-
-        // Кнопка "Выбрать все"
         const selectAllDiv = document.createElement('div');
         selectAllDiv.style.marginBottom = '10px';
         selectAllDiv.innerHTML = `<label class="checkbox-item"><input type="checkbox" id="selectAllLoc" onchange="toggleSelectAll(this)"> <b>Выбрать все (${locations.length})</b></label>`;
@@ -489,10 +545,7 @@
         locations.forEach((loc, index) => {
             const div = document.createElement('div');
             div.className = 'checkbox-item';
-            div.innerHTML = `
-                <input type="checkbox" class="loc-checkbox" value="${loc}" checked>
-                <span>${loc}</span>
-            `;
+            div.innerHTML = `<input type="checkbox" class="loc-checkbox" value="${loc}" checked><span>${loc}</span>`;
             list.appendChild(div);
         });
 
@@ -501,7 +554,7 @@
             const selected = Array.from(checkboxes).map(cb => cb.value);
             if (selected.length > 0) {
                 addToEstimateLogic(activityKey, selected);
-                closeModal();
+                closeModal('locationModal');
             } else {
                 alert('Выберите хотя бы одно место');
             }
@@ -515,14 +568,22 @@
         checkboxes.forEach(cb => cb.checked = source.checked);
     }
 
-    function closeModal() {
-        document.getElementById('locationModal').style.display = 'none';
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
     }
 
-    // --- ДОБАВЛЕНИЕ В СМЕТУ ---
+    // --- ЛОГИКА СМЕТЫ ---
+
     function addToEstimateLogic(activityKey, locations) {
         const activity = activitiesDB[activityKey];
         const quantity = locations.length;
+
+        // Глубокое копирование материалов, чтобы редактирование не влияло на шаблон
+        const materialsCopy = activity.materials.map(m => ({
+            ...m,
+            totalQty: m.qty * quantity,
+            totalCost: m.price * m.qty * quantity
+        }));
 
         const newItem = {
             id: Date.now(),
@@ -532,18 +593,12 @@
             laborTotal: activity.laborPerUnit * quantity,
             mechTotal: activity.mechPerUnit * quantity,
             workCost: activity.basePrice * quantity,
-            materials: activity.materials.map(m => ({
-                ...m,
-                totalQty: m.qty * quantity,
-                totalCost: m.price * m.qty * quantity
-            })),
+            materials: materialsCopy,
             locations: locations
         };
 
         currentEstimate.push(newItem);
         updateEstimateTable();
-
-        // Скролл к смете
         document.getElementById('estimateSection').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -553,15 +608,14 @@
         let grandTotal = 0;
 
         currentEstimate.forEach((item, index) => {
-            // Расчет стоимости материалов
             let materialsHtml = '';
             let materialsCostSum = 0;
 
             item.materials.forEach(mat => {
                 materialsCostSum += mat.totalCost;
                 materialsHtml += `
-                    <div class="material-item">
-                        <span>${mat.name} (${mat.totalQty} ${mat.unit})</span>
+                    <div class="material-preview-item">
+                        <span>${mat.name} (${mat.totalQty.toFixed(2)} ${mat.unit})</span>
                         <span>${mat.totalCost.toLocaleString()} ₽</span>
                     </div>
                 `;
@@ -576,16 +630,17 @@
                 <td>
                     <div style="font-weight:600;">${item.name}</div>
                     <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">Объекты: ${item.locations.join(', ')}</div>
-                    ${materialsHtml ? `<div class="materials-list">${materialsHtml}</div>` : ''}
+                    ${materialsHtml ? `<div class="materials-preview">${materialsHtml}</div>` : '<div style="font-size:0.8rem; color:#94a3b8; margin-top:4px;">Нет материалов</div>'}
                 </td>
                 <td>${item.unit}</td>
                 <td>${item.qty}</td>
                 <td>${item.laborTotal.toFixed(1)}</td>
                 <td>${item.mechTotal.toFixed(1)}</td>
                 <td>
-                    <div>${item.workCost.toLocaleString()}</div>
-                    <div style="font-size:0.8rem; color:#16a34a; margin-top:4px;">+ Мат: ${materialsCostSum.toLocaleString()}</div>
-                    <div style="font-weight:bold; border-top:1px solid #ddd; margin-top:6px; padding-top:4px;">${totalRowCost.toLocaleString()}</div>
+                    <div style="font-size:0.9rem; color:#64748b;">Работы: ${item.workCost.toLocaleString()}</div>
+                    <div style="font-size:0.9rem; color:#16a34a;">Мат: ${materialsCostSum.toLocaleString()}</div>
+                    <div style="font-weight:bold; border-top:1px solid #ddd; margin-top:6px; padding-top:4px; font-size:1.1rem;">${totalRowCost.toLocaleString()}</div>
+                    ${item.materials.length > 0 ? `<button class="btn btn-outline btn-sm btn-icon" style="margin-top:8px; width:100%;" onclick="openMaterialsEditor(${item.id})">✏️ Материалы</button>` : ''}
                 </td>
             `;
             tbody.appendChild(tr);
@@ -598,6 +653,122 @@
         if(confirm('Очистить всю смету?')) {
             currentEstimate = [];
             updateEstimateTable();
+        }
+    }
+
+    // --- РЕДАКТОР МАТЕРИАЛОВ ---
+
+    function openMaterialsEditor(itemId) {
+        const item = currentEstimate.find(i => i.id === itemId);
+        if (!item) return;
+
+        currentEditingItemId = itemId;
+        document.getElementById('matModalTitle').innerText = `Материалы: ${item.name}`;
+        
+        renderMaterialsEditorRows(item.materials);
+        
+        document.getElementById('materialsModal').style.display = 'flex';
+    }
+
+    function renderMaterialsEditorRows(materials) {
+        const tbody = document.getElementById('materialsEditorBody');
+        tbody.innerHTML = '';
+        let totalMatCost = 0;
+
+        materials.forEach((mat, index) => {
+            const rowTotal = mat.totalQty * mat.price; // Пересчет на лету или использование сохраненного totalCost
+            // Для надежности используем явный пересчет: цена * кол-во
+            // Но в объекте mat уже есть totalCost, убедимся что они синхронны при рендере
+            const currentTotal = mat.totalQty * mat.price; 
+            mat.totalCost = currentTotal; // Синхронизируем
+            totalMatCost += currentTotal;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" value="${mat.name}" onchange="updateMatField(${index}, 'name', this.value)" style="width:100%"></td>
+                <td><input type="number" value="${mat.totalQty}" step="0.01" onchange="updateMatField(${index}, 'totalQty', this.value)" style="width:100%"></td>
+                <td><input type="text" value="${mat.unit}" disabled style="background:#f1f5f9; width:100%"></td>
+                <td><input type="number" value="${mat.price}" step="0.01" onchange="updateMatField(${index}, 'price', this.value)" style="width:100%"></td>
+                <td style="font-weight:500; text-align:right;">${currentTotal.toLocaleString()}</td>
+                <td style="text-align:center;">
+                    <button class="btn btn-danger btn-sm btn-icon" onclick="removeMatRow(${index})">🗑️</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('matModalTotal').innerText = totalMatCost.toLocaleString();
+    }
+
+    // Обновление поля материала в памяти (временное)
+    window.updateMatField = function(index, field, value) {
+        const item = currentEstimate.find(i => i.id === currentEditingItemId);
+        if (!item) return;
+
+        const mat = item.materials[index];
+        if (field === 'name') mat.name = value;
+        if (field === 'totalQty') mat.totalQty = parseFloat(value) || 0;
+        if (field === 'price') mat.price = parseFloat(value) || 0;
+
+        // Пересчет суммы строки
+        mat.totalCost = mat.totalQty * mat.price;
+        
+        // Перерисовка таблицы для обновления итогов
+        renderMaterialsEditorRows(item.materials);
+    };
+
+    window.removeMatRow = function(index) {
+        const item = currentEstimate.find(i => i.id === currentEditingItemId);
+        if (!item) return;
+        
+        item.materials.splice(index, 1);
+        renderMaterialsEditorRows(item.materials);
+    };
+
+    window.addNewMaterialRow = function() {
+        const item = currentEstimate.find(i => i.id === currentEditingItemId);
+        if (!item) return;
+
+        const name = document.getElementById('newMatName').value;
+        const qty = parseFloat(document.getElementById('newMatQty').value) || 0;
+        const unit = document.getElementById('newMatUnit').value;
+        const price = parseFloat(document.getElementById('newMatPrice').value) || 0;
+
+        if (!name) {
+            alert('Введите наименование материала');
+            return;
+        }
+
+        item.materials.push({
+            name: name,
+            qty: 0, // Базовое кол-во на ед. работы тут не важно, так как мы добавляем общее кол-во
+            unit: unit,
+            price: price,
+            totalQty: qty,
+            totalCost: qty * price
+        });
+
+        // Очистка полей
+        document.getElementById('newMatName').value = '';
+        document.getElementById('newMatQty').value = '1';
+        document.getElementById('newMatPrice').value = '0';
+
+        renderMaterialsEditorRows(item.materials);
+    };
+
+    window.saveMaterialsChanges = function() {
+        closeModal('materialsModal');
+        updateEstimateTable();
+        currentEditingItemId = null;
+    };
+
+    // Закрытие модальных окон по клику вне области
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.style.display = 'none';
+            if (event.target.id === 'materialsModal') {
+                currentEditingItemId = null;
+            }
         }
     }
 
