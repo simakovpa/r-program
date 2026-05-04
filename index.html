@@ -462,7 +462,7 @@
         const objId = document.getElementById('objectSelect').value;
         const defect = defectsData[objId].find(d => d.id === defectId);
         const activityKey = document.getElementById(`activity-${defectId}`).value;
-        
+
         // Если тех. место одно, добавляем сразу
         if (defect.locations.length === 1) {
             addToEstimateLogic(activityKey, [defect.locations[0]]);
@@ -477,9 +477,9 @@
         const modal = document.getElementById('locationModal');
         const list = document.getElementById('modalCheckboxList');
         const confirmBtn = document.getElementById('confirmLocationBtn');
-        
+
         list.innerHTML = '';
-        
+
         // Кнопка "Выбрать все"
         const selectAllDiv = document.createElement('div');
         selectAllDiv.style.marginBottom = '10px';
@@ -523,7 +523,7 @@
     function addToEstimateLogic(activityKey, locations) {
         const activity = activitiesDB[activityKey];
         const quantity = locations.length;
-        
+
         const newItem = {
             id: Date.now(),
             name: activity.name,
@@ -542,7 +542,7 @@
 
         currentEstimate.push(newItem);
         updateEstimateTable();
-        
+
         // Скролл к смете
         document.getElementById('estimateSection').scrollIntoView({ behavior: 'smooth' });
     }
@@ -556,7 +556,7 @@
             // Расчет стоимости материалов
             let materialsHtml = '';
             let materialsCostSum = 0;
-            
+
             item.materials.forEach(mat => {
                 materialsCostSum += mat.totalCost;
                 materialsHtml += `
