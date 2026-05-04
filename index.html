@@ -95,7 +95,6 @@
             cursor: pointer;
             transition: all 0.2s;
             font-size: 0.95rem;
-            gap: 6px;
         }
 
         .btn-primary { background: var(--primary); color: white; }
@@ -124,9 +123,14 @@
             margin-bottom: 1rem;
             background: #fff;
             transition: box-shadow 0.2s;
+            animation: fadeIn 0.3s ease-in-out;
         }
-        .defect-item:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .defect-header {
             display: flex;
             justify-content: space-between;
@@ -134,14 +138,23 @@
             margin-bottom: 0.8rem;
         }
         .defect-title { font-weight: 600; color: #dc2626; }
-        .defect-location { 
-            font-size: 0.85rem; 
-            color: var(--text-light); 
-            background: #f1f5f9; 
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            margin-right: 4px;
+        
+        .location-tag {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 6px;
+            margin-bottom: 4px;
             display: inline-block;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .location-tag.pending {
+            background: #fff7ed;
+            color: #c2410c;
+            border-color: #ffedd5;
         }
 
         .action-row {
@@ -159,21 +172,20 @@
         th { background: #f8fafc; font-weight: 600; font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; }
         tr:last-child td { border-bottom: none; }
         
-        .materials-preview {
+        .materials-list {
             font-size: 0.85rem;
             background: #f8fafc;
             padding: 0.5rem;
             border-radius: 4px;
             margin-top: 0.5rem;
-            max-height: 100px;
-            overflow-y: auto;
         }
-        .material-preview-item {
+        .material-item {
             display: flex;
             justify-content: space-between;
             padding: 2px 0;
             border-bottom: 1px dotted #cbd5e1;
         }
+        .material-item:last-child { border-bottom: none; }
 
         /* Modal */
         .modal-overlay {
@@ -183,19 +195,17 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(2px);
         }
         .modal {
             background: white;
             padding: 2rem;
             border-radius: 8px;
             width: 90%;
-            max-width: 800px;
-            max-height: 90vh;
+            max-width: 600px;
+            max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        
         .checkbox-group {
             max-height: 200px;
             overflow-y: auto;
@@ -209,6 +219,7 @@
             align-items: center;
             padding: 0.4rem;
             cursor: pointer;
+            border-radius: 4px;
         }
         .checkbox-item:hover { background: #f1f5f9; }
         .checkbox-item input { margin-right: 0.8rem; }
@@ -223,23 +234,11 @@
         }
 
         .hidden { display: none; }
-
-        /* Materials Editor Specifics */
-        .mat-editor-table input {
-            padding: 0.4rem;
-            font-size: 0.9rem;
-        }
-        .mat-editor-table td {
-            vertical-align: middle;
-        }
-        .add-material-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
-            gap: 10px;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border);
-            align-items: end;
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+            font-style: italic;
         }
     </style>
 </head>
@@ -249,8 +248,8 @@
     <div class="container header-content">
         <h1>⚡ Локальный сметный расчет (ЛСР)</h1>
         <div>
-            <button class="btn btn-outline" onclick="alert('Черновик сохранен в локальное хранилище!')">💾 Сохранить</button>
-            <button class="btn btn-primary" style="margin-left: 10px;" onclick="window.print()">🖨️ Печать</button>
+            <button class="btn btn-outline" onclick="alert('Черновик сохранен!')">💾 Сохранить черновик</button>
+            <button class="btn btn-primary" style="margin-left: 10px;">🖨️ Печать / Экспорт</button>
         </div>
     </div>
 </header>
@@ -277,12 +276,17 @@
         </div>
     </div>
 
-    <!-- Шаг 2: Дефектная ведомость -->
+    <!-- Шаг 2: Дефектная ведомость (Фильтруемый список) -->
     <div class="card hidden" id="defectsSection">
         <h2>2. Выявленные дефекты и мероприятия</h2>
-        <p style="color: var(--text-light); margin-bottom: 1rem;">Выберите мероприятие для устранения дефекта и добавьте его в смету.</p>
+        <p style="color: var(--text-light); margin-bottom: 1rem;">
+            Выберите мероприятие. Отображаются только те технические места, которые еще не включены в смету.
+        </p>
         <div id="defectsList">
             <!-- Сюда будут генерироваться дефекты через JS -->
+        </div>
+        <div id="noDefectsMsg" class="empty-state hidden">
+            Все выявленные дефекты добавлены в смету.
         </div>
     </div>
 
@@ -303,6 +307,7 @@
                     <th style="width: 15%">Трудозатраты (чел-час)</th>
                     <th style="width: 15%">Механизмы (маш-час)</th>
                     <th style="width: 15%">Стоимость (руб)</th>
+                    <th style="width: 5%"></th>
                 </tr>
             </thead>
             <tbody id="estimateBody">
@@ -321,14 +326,16 @@
 <div class="modal-overlay" id="locationModal">
     <div class="modal">
         <h3>Выберите технические места</h3>
-        <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">Дефект обнаружен в нескольких местах. Выберите где применять мероприятие:</p>
+        <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">
+            Доступны только места, еще не включенные в смету для этого дефекта.
+        </p>
         
         <div class="checkbox-group" id="modalCheckboxList">
             <!-- Чекбоксы -->
         </div>
         
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1rem;">
-            <button class="btn btn-outline" onclick="closeModal('locationModal')">Отмена</button>
+            <button class="btn btn-outline" onclick="closeModal()">Отмена</button>
             <button class="btn btn-primary" id="confirmLocationBtn">Добавить выбранные</button>
         </div>
     </div>
@@ -336,56 +343,34 @@
 
 <!-- Модальное окно редактирования материалов -->
 <div class="modal-overlay" id="materialsModal">
-    <div class="modal">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-            <h3 id="matModalTitle">Редактирование материалов</h3>
-            <button class="btn btn-outline btn-sm" onclick="closeModal('materialsModal')">✕</button>
-        </div>
+    <div class="modal" style="max-width: 700px;">
+        <h3>Редактирование материалов</h3>
+        <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;" id="matWorkName"></p>
         
-        <p style="font-size: 0.9rem; color: var(--text-light);">Измените количество или цену материалов. Сумма пересчитается автоматически.</p>
-
-        <table class="mat-editor-table">
+        <table id="materialsEditTable">
             <thead>
                 <tr>
                     <th>Наименование</th>
                     <th style="width: 80px">Кол-во</th>
-                    <th style="width: 80px">Ед.</th>
-                    <th style="width: 100px">Цена (₽)</th>
-                    <th style="width: 100px">Сумма (₽)</th>
-                    <th style="width: 50px"></th>
+                    <th style="width: 60px">Ед.</th>
+                    <th style="width: 100px">Цена</th>
+                    <th style="width: 100px">Сумма</th>
+                    <th style="width: 40px"></th>
                 </tr>
             </thead>
-            <tbody id="materialsEditorBody">
-                <!-- Строки редактора -->
-            </tbody>
+            <tbody id="materialsEditBody"></tbody>
         </table>
 
-        <div class="add-material-row">
-            <div>
-                <label style="font-size:0.8rem">Наименование</label>
-                <input type="text" id="newMatName" placeholder="Например: Болт М12">
-            </div>
-            <div>
-                <label style="font-size:0.8rem">Кол-во</label>
-                <input type="number" id="newMatQty" value="1" step="0.1">
-            </div>
-            <div>
-                <label style="font-size:0.8rem">Ед.</label>
-                <input type="text" id="newMatUnit" value="шт">
-            </div>
-            <div>
-                <label style="font-size:0.8rem">Цена</label>
-                <input type="number" id="newMatPrice" value="0">
-            </div>
-            <button class="btn btn-success" style="height: 42px;" onclick="addNewMaterialRow()">+ Добавить</button>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; gap: 10px;">
+            <input type="text" id="newMatName" placeholder="Название материала" style="flex: 2;">
+            <input type="number" id="newMatQty" placeholder="Кол-во" step="0.01" style="flex: 1;">
+            <input type="text" id="newMatUnit" placeholder="Ед." style="flex: 0.5;">
+            <input type="number" id="newMatPrice" placeholder="Цена" step="0.01" style="flex: 1;">
+            <button class="btn btn-success btn-sm" onclick="addNewMaterialRow()">+</button>
         </div>
-        <!-- Доп поле цены за единицу работы, если нужно, но пока опустим для простоты -->
 
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-            <div style="margin-right: auto; font-weight: bold; font-size: 1.1rem;">
-                Итого материалов: <span id="matModalTotal">0</span> ₽
-            </div>
-            <button class="btn btn-outline" onclick="closeModal('materialsModal')">Отмена</button>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem;">
+            <button class="btn btn-outline" onclick="closeMaterialsModal()">Закрыть</button>
             <button class="btn btn-primary" onclick="saveMaterialsChanges()">Сохранить изменения</button>
         </div>
     </div>
@@ -440,50 +425,89 @@
 
     const defectsData = {
         'obj1': [
-            { id: 'd1', title: 'Ухудшение качества масла в Т-1', locations: ['Трансформатор Т-1'], defaultActivity: 'act_transformer_oil' },
-            { id: 'd2', title: 'Нагрев контактных соединений', locations: ['Выключатель ВВ-10 №1', 'Выключатель ВВ-10 №2', 'Разъединитель РЛНД-10'], defaultActivity: 'act_switch_clean' }
+            { 
+                id: 'd1', 
+                title: 'Ухудшение качества масла в Т-1', 
+                locations: ['Трансформатор Т-1'], 
+                defaultActivity: 'act_transformer_oil' 
+            },
+            { 
+                id: 'd2', 
+                title: 'Нагрев контактных соединений', 
+                locations: ['Выключатель ВВ-10 №1', 'Выключатель ВВ-10 №2', 'Разъединитель РЛНД-10'], 
+                defaultActivity: 'act_switch_clean' 
+            }
         ],
         'obj2': [
-            { id: 'd3', title: 'Бой изоляторов на опорах 12-15', locations: ['Опора №12', 'Опора №13', 'Опора №14', 'Опора №15'], defaultActivity: 'act_insulator_replace' },
-            { id: 'd4', title: 'Зарастание трассы ВЛ', locations: ['Участок км 0.0 - км 2.5'], defaultActivity: 'act_line_clear' }
+            { 
+                id: 'd3', 
+                title: 'Бой изоляторов на опорах 12-15', 
+                locations: ['Опора №12', 'Опора №13', 'Опора №14', 'Опора №15'], 
+                defaultActivity: 'act_insulator_replace' 
+            },
+            { 
+                id: 'd4', 
+                title: 'Зарастание трассы ВЛ', 
+                locations: ['Участок км 0.0 - км 2.5'], 
+                defaultActivity: 'act_line_clear' 
+            }
         ],
         'obj3': [
-             { id: 'd5', title: 'Коррозия корпуса РУ-0.4 кВ', locations: ['Ячейка ввода', 'Ячейка секционного'], defaultActivity: 'act_switch_clean' }
+             { 
+                id: 'd5', 
+                title: 'Коррозия корпуса РУ-0.4 кВ', 
+                locations: ['Ячейка ввода', 'Ячейка секционного'], 
+                defaultActivity: 'act_switch_clean'
+            }
         ]
     };
 
     let currentEstimate = [];
-    let currentEditingItemId = null; // ID элемента, который сейчас редактируется в модальном окне
+    let currentEditingItemId = null;
 
-    // --- ЛОГИКА ОТРИСОВКИ ДЕФЕКТОВ ---
+    // --- ЛОГИКА ---
 
     function loadDefects() {
         const objId = document.getElementById('objectSelect').value;
         const defectsContainer = document.getElementById('defectsList');
         const defectsSection = document.getElementById('defectsSection');
         const estimateSection = document.getElementById('estimateSection');
+        const noDefectsMsg = document.getElementById('noDefectsMsg');
 
         defectsContainer.innerHTML = '';
-        // Не очищаем смету при смене объекта, чтобы можно было собрать смету по нескольким объектам, 
-        // но для простоты прототипа оставим как есть или можно очистить. 
-        // Оставим как есть, чтобы не терять данные случайно.
-
+        
         if (!objId) {
             defectsSection.classList.add('hidden');
+            estimateSection.classList.add('hidden');
             return;
         }
 
         defectsSection.classList.remove('hidden');
         estimateSection.classList.remove('hidden');
 
-        const defects = defectsData[objId] || [];
-        
-        if (defects.length === 0) {
-            defectsContainer.innerHTML = '<p>Дефектов для данного объекта не найдено.</p>';
-            return;
-        }
+        const allDefects = defectsData[objId] || [];
+        let hasVisibleDefects = false;
 
-        defects.forEach(defect => {
+        allDefects.forEach(defect => {
+            // 1. Собираем все места, которые УЖЕ есть в смете для этого дефекта
+            const usedLocations = new Set();
+            currentEstimate.forEach(item => {
+                if (item.defectId === defect.id) {
+                    item.locations.forEach(loc => usedLocations.add(loc));
+                }
+            });
+
+            // 2. Фильтруем: оставляем только те места, которых НЕТ в смете
+            const availableLocations = defect.locations.filter(loc => !usedLocations.has(loc));
+
+            // 3. Если доступных мест нет -> скрываем дефект полностью
+            if (availableLocations.length === 0) {
+                return; 
+            }
+
+            hasVisibleDefects = true;
+
+            // 4. Рендерим карточку с доступными местами
             const card = document.createElement('div');
             card.className = 'defect-item';
             
@@ -493,12 +517,17 @@
                 optionsHtml += `<option value="${key}" ${selected}>${val.name}</option>`;
             }
 
+            // Генерируем теги для доступных мест
+            const locationsHtml = availableLocations.map(loc => 
+                `<span class="location-tag pending">📍 ${loc}</span>`
+            ).join('');
+
             card.innerHTML = `
                 <div class="defect-header">
                     <div>
                         <div class="defect-title">${defect.title}</div>
                         <div style="margin-top:4px;">
-                            ${defect.locations.map(l => `<span class="defect-location">${l}</span>`).join('')}
+                            ${locationsHtml}
                         </div>
                     </div>
                 </div>
@@ -516,6 +545,12 @@
             `;
             defectsContainer.appendChild(card);
         });
+
+        if (!hasVisibleDefects) {
+            noDefectsMsg.classList.remove('hidden');
+        } else {
+            noDefectsMsg.classList.add('hidden');
+        }
     }
 
     function prepareAddToEstimate(defectId) {
@@ -523,29 +558,53 @@
         const defect = defectsData[objId].find(d => d.id === defectId);
         const activityKey = document.getElementById(`activity-${defectId}`).value;
 
-        if (defect.locations.length === 1) {
-            addToEstimateLogic(activityKey, [defect.locations[0]]);
+        // Получаем уже использованные места для этого дефекта
+        const usedLocations = new Set();
+        currentEstimate.forEach(item => {
+            if (item.defectId === defectId) {
+                item.locations.forEach(loc => usedLocations.add(loc));
+            }
+        });
+
+        // Доступные места
+        const availableLocations = defect.locations.filter(loc => !usedLocations.has(loc));
+
+        if (availableLocations.length === 0) {
+            alert('Все места для этого дефекта уже добавлены.');
+            loadDefects(); // Обновить интерфейс
+            return;
+        }
+
+        if (availableLocations.length === 1) {
+            addToEstimateLogic(activityKey, [availableLocations[0]], defectId);
         } else {
-            openLocationModal(defect.locations, activityKey);
+            openLocationModal(availableLocations, activityKey, defectId);
         }
     }
 
     // --- МОДАЛЬНОЕ ОКНО ВЫБОРА МЕСТ ---
-    function openLocationModal(locations, activityKey) {
+    function openLocationModal(locations, activityKey, defectId) {
         const modal = document.getElementById('locationModal');
         const list = document.getElementById('modalCheckboxList');
         const confirmBtn = document.getElementById('confirmLocationBtn');
 
         list.innerHTML = '';
+        
+        // Кнопка "Выбрать все"
         const selectAllDiv = document.createElement('div');
         selectAllDiv.style.marginBottom = '10px';
+        selectAllDiv.style.borderBottom = '1px solid #eee';
+        selectAllDiv.style.paddingBottom = '5px';
         selectAllDiv.innerHTML = `<label class="checkbox-item"><input type="checkbox" id="selectAllLoc" onchange="toggleSelectAll(this)"> <b>Выбрать все (${locations.length})</b></label>`;
         list.appendChild(selectAllDiv);
 
         locations.forEach((loc, index) => {
             const div = document.createElement('div');
             div.className = 'checkbox-item';
-            div.innerHTML = `<input type="checkbox" class="loc-checkbox" value="${loc}" checked><span>${loc}</span>`;
+            div.innerHTML = `
+                <input type="checkbox" class="loc-checkbox" value="${loc}" checked>
+                <span>${loc}</span>
+            `;
             list.appendChild(div);
         });
 
@@ -553,8 +612,8 @@
             const checkboxes = document.querySelectorAll('.loc-checkbox:checked');
             const selected = Array.from(checkboxes).map(cb => cb.value);
             if (selected.length > 0) {
-                addToEstimateLogic(activityKey, selected);
-                closeModal('locationModal');
+                addToEstimateLogic(activityKey, selected, defectId);
+                closeModal();
             } else {
                 alert('Выберите хотя бы одно место');
             }
@@ -568,37 +627,36 @@
         checkboxes.forEach(cb => cb.checked = source.checked);
     }
 
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
+    function closeModal() {
+        document.getElementById('locationModal').style.display = 'none';
     }
 
-    // --- ЛОГИКА СМЕТЫ ---
-
-    function addToEstimateLogic(activityKey, locations) {
+    // --- ДОБАВЛЕНИЕ В СМЕТУ ---
+    function addToEstimateLogic(activityKey, locations, defectId) {
         const activity = activitiesDB[activityKey];
         const quantity = locations.length;
 
-        // Глубокое копирование материалов, чтобы редактирование не влияло на шаблон
-        const materialsCopy = activity.materials.map(m => ({
-            ...m,
-            totalQty: m.qty * quantity,
-            totalCost: m.price * m.qty * quantity
-        }));
-
         const newItem = {
             id: Date.now(),
+            defectId: defectId, // Связь с дефектом для фильтрации
             name: activity.name,
             unit: activity.unit,
             qty: quantity,
             laborTotal: activity.laborPerUnit * quantity,
             mechTotal: activity.mechPerUnit * quantity,
             workCost: activity.basePrice * quantity,
-            materials: materialsCopy,
+            materials: activity.materials.map(m => ({
+                ...m,
+                totalQty: m.qty * quantity,
+                totalCost: m.price * m.qty * quantity
+            })),
             locations: locations
         };
 
         currentEstimate.push(newItem);
         updateEstimateTable();
+        loadDefects(); // Перерисовать верхний список (скрыть добавленные места)
+
         document.getElementById('estimateSection').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -607,14 +665,20 @@
         tbody.innerHTML = '';
         let grandTotal = 0;
 
+        if (currentEstimate.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Смета пуста. Добавьте мероприятия из списка выше.</td></tr>';
+            document.getElementById('grandTotal').innerText = '0';
+            return;
+        }
+
         currentEstimate.forEach((item, index) => {
             let materialsHtml = '';
             let materialsCostSum = 0;
 
-            item.materials.forEach(mat => {
+            item.materials.forEach((mat, matIndex) => {
                 materialsCostSum += mat.totalCost;
                 materialsHtml += `
-                    <div class="material-preview-item">
+                    <div class="material-item">
                         <span>${mat.name} (${mat.totalQty.toFixed(2)} ${mat.unit})</span>
                         <span>${mat.totalCost.toLocaleString()} ₽</span>
                     </div>
@@ -630,17 +694,20 @@
                 <td>
                     <div style="font-weight:600;">${item.name}</div>
                     <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">Объекты: ${item.locations.join(', ')}</div>
-                    ${materialsHtml ? `<div class="materials-preview">${materialsHtml}</div>` : '<div style="font-size:0.8rem; color:#94a3b8; margin-top:4px;">Нет материалов</div>'}
+                    ${materialsHtml ? `<div class="materials-list">${materialsHtml}</div>` : ''}
+                    ${item.materials.length > 0 ? `<button class="btn btn-outline btn-sm" style="margin-top:5px; font-size:0.75rem;" onclick="openMaterialsModal(${item.id})">✏️ Редактировать материалы</button>` : ''}
                 </td>
                 <td>${item.unit}</td>
                 <td>${item.qty}</td>
                 <td>${item.laborTotal.toFixed(1)}</td>
                 <td>${item.mechTotal.toFixed(1)}</td>
                 <td>
-                    <div style="font-size:0.9rem; color:#64748b;">Работы: ${item.workCost.toLocaleString()}</div>
-                    <div style="font-size:0.9rem; color:#16a34a;">Мат: ${materialsCostSum.toLocaleString()}</div>
-                    <div style="font-weight:bold; border-top:1px solid #ddd; margin-top:6px; padding-top:4px; font-size:1.1rem;">${totalRowCost.toLocaleString()}</div>
-                    ${item.materials.length > 0 ? `<button class="btn btn-outline btn-sm btn-icon" style="margin-top:8px; width:100%;" onclick="openMaterialsEditor(${item.id})">✏️ Материалы</button>` : ''}
+                    <div>${item.workCost.toLocaleString()}</div>
+                    <div style="font-size:0.8rem; color:#16a34a; margin-top:4px;">+ Мат: ${materialsCostSum.toLocaleString()}</div>
+                    <div style="font-weight:bold; border-top:1px solid #ddd; margin-top:6px; padding-top:4px;">${totalRowCost.toLocaleString()}</div>
+                </td>
+                <td>
+                    <button class="btn btn-danger btn-icon" onclick="removeFromEstimate(${item.id})" title="Удалить позицию">🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -649,127 +716,119 @@
         document.getElementById('grandTotal').innerText = grandTotal.toLocaleString();
     }
 
+    function removeFromEstimate(itemId) {
+        if(confirm('Удалить эту позицию из сметы? Соответствующие технические места снова станут доступными для добавления.')) {
+            currentEstimate = currentEstimate.filter(item => item.id !== itemId);
+            updateEstimateTable();
+            loadDefects(); // Возвращаем места в верхний список
+        }
+    }
+
     function clearEstimate() {
         if(confirm('Очистить всю смету?')) {
             currentEstimate = [];
             updateEstimateTable();
+            loadDefects();
         }
     }
 
-    // --- РЕДАКТОР МАТЕРИАЛОВ ---
+    // --- РЕДАКТИРОВАНИЕ МАТЕРИАЛОВ ---
 
-    function openMaterialsEditor(itemId) {
+    function openMaterialsModal(itemId) {
         const item = currentEstimate.find(i => i.id === itemId);
         if (!item) return;
 
         currentEditingItemId = itemId;
-        document.getElementById('matModalTitle').innerText = `Материалы: ${item.name}`;
+        document.getElementById('matWorkName').innerText = `Работа: ${item.name}`;
         
-        renderMaterialsEditorRows(item.materials);
-        
+        renderMaterialsEditTable(item.materials);
         document.getElementById('materialsModal').style.display = 'flex';
     }
 
-    function renderMaterialsEditorRows(materials) {
-        const tbody = document.getElementById('materialsEditorBody');
+    function renderMaterialsEditTable(materials) {
+        const tbody = document.getElementById('materialsEditBody');
         tbody.innerHTML = '';
-        let totalMatCost = 0;
 
         materials.forEach((mat, index) => {
-            const rowTotal = mat.totalQty * mat.price; // Пересчет на лету или использование сохраненного totalCost
-            // Для надежности используем явный пересчет: цена * кол-во
-            // Но в объекте mat уже есть totalCost, убедимся что они синхронны при рендере
-            const currentTotal = mat.totalQty * mat.price; 
-            mat.totalCost = currentTotal; // Синхронизируем
-            totalMatCost += currentTotal;
+            const sum = mat.totalQty * mat.price; // Пересчет на лету при рендере не нужен, храним totalCost, но тут лучше считать динамически или брать из объекта
+            // В объекте mat у нас totalQty и price. totalCost может быть устаревшим если меняли qty вручную в инпуте, поэтому считаем:
+            const currentSum = mat.totalQty * mat.price;
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><input type="text" value="${mat.name}" onchange="updateMatField(${index}, 'name', this.value)" style="width:100%"></td>
                 <td><input type="number" value="${mat.totalQty}" step="0.01" onchange="updateMatField(${index}, 'totalQty', this.value)" style="width:100%"></td>
-                <td><input type="text" value="${mat.unit}" disabled style="background:#f1f5f9; width:100%"></td>
+                <td><input type="text" value="${mat.unit}" onchange="updateMatField(${index}, 'unit', this.value)" style="width:100%"></td>
                 <td><input type="number" value="${mat.price}" step="0.01" onchange="updateMatField(${index}, 'price', this.value)" style="width:100%"></td>
-                <td style="font-weight:500; text-align:right;">${currentTotal.toLocaleString()}</td>
-                <td style="text-align:center;">
-                    <button class="btn btn-danger btn-sm btn-icon" onclick="removeMatRow(${index})">🗑️</button>
-                </td>
+                <td style="padding-top:8px;">${currentSum.toLocaleString()}</td>
+                <td><button class="btn btn-danger btn-icon" onclick="removeMatRow(${index})">×</button></td>
             `;
             tbody.appendChild(tr);
         });
-
-        document.getElementById('matModalTotal').innerText = totalMatCost.toLocaleString();
     }
 
-    // Обновление поля материала в памяти (временное)
-    window.updateMatField = function(index, field, value) {
+    function updateMatField(index, field, value) {
         const item = currentEstimate.find(i => i.id === currentEditingItemId);
         if (!item) return;
 
         const mat = item.materials[index];
-        if (field === 'name') mat.name = value;
-        if (field === 'totalQty') mat.totalQty = parseFloat(value) || 0;
-        if (field === 'price') mat.price = parseFloat(value) || 0;
-
-        // Пересчет суммы строки
-        mat.totalCost = mat.totalQty * mat.price;
+        if (field === 'totalQty' || field === 'price') {
+            mat[field] = parseFloat(value) || 0;
+            mat.totalCost = mat.totalQty * mat.price;
+        } else {
+            mat[field] = value;
+        }
         
-        // Перерисовка таблицы для обновления итогов
-        renderMaterialsEditorRows(item.materials);
-    };
+        // Перерисовываем таблицу для обновления суммы
+        renderMaterialsEditTable(item.materials);
+    }
 
-    window.removeMatRow = function(index) {
+    function removeMatRow(index) {
         const item = currentEstimate.find(i => i.id === currentEditingItemId);
         if (!item) return;
-        
         item.materials.splice(index, 1);
-        renderMaterialsEditorRows(item.materials);
-    };
+        renderMaterialsEditTable(item.materials);
+    }
 
-    window.addNewMaterialRow = function() {
+    function addNewMaterialRow() {
         const item = currentEstimate.find(i => i.id === currentEditingItemId);
         if (!item) return;
 
         const name = document.getElementById('newMatName').value;
         const qty = parseFloat(document.getElementById('newMatQty').value) || 0;
-        const unit = document.getElementById('newMatUnit').value;
+        const unit = document.getElementById('newMatUnit').value || 'шт';
         const price = parseFloat(document.getElementById('newMatPrice').value) || 0;
 
         if (!name) {
-            alert('Введите наименование материала');
+            alert('Введите название материала');
             return;
         }
 
         item.materials.push({
             name: name,
-            qty: 0, // Базовое кол-во на ед. работы тут не важно, так как мы добавляем общее кол-во
+            totalQty: qty,
             unit: unit,
             price: price,
-            totalQty: qty,
             totalCost: qty * price
         });
 
         // Очистка полей
         document.getElementById('newMatName').value = '';
-        document.getElementById('newMatQty').value = '1';
-        document.getElementById('newMatPrice').value = '0';
+        document.getElementById('newMatQty').value = '';
+        document.getElementById('newMatUnit').value = '';
+        document.getElementById('newMatPrice').value = '';
 
-        renderMaterialsEditorRows(item.materials);
-    };
+        renderMaterialsEditTable(item.materials);
+    }
 
-    window.saveMaterialsChanges = function() {
-        closeModal('materialsModal');
+    function saveMaterialsChanges() {
+        closeMaterialsModal();
         updateEstimateTable();
-        currentEditingItemId = null;
-    };
+    }
 
-    // Закрытие модальных окон по клику вне области
-    window.onclick = function(event) {
-        if (event.target.classList.contains('modal-overlay')) {
-            event.target.style.display = 'none';
-            if (event.target.id === 'materialsModal') {
-                currentEditingItemId = null;
-            }
-        }
+    function closeMaterialsModal() {
+        document.getElementById('materialsModal').style.display = 'none';
+        currentEditingItemId = null;
     }
 
 </script>
