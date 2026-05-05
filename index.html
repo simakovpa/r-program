@@ -67,7 +67,7 @@
         .form-group { margin-bottom: 1rem; }
         label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
         
-        select, input[type="text"], input[type="number"], input[type="date"] {
+        select, input[type="text"], input[type="number"], input[type="month"] {
             width: 100%;
             padding: 0.6rem;
             border: 1px solid var(--border);
@@ -232,36 +232,33 @@
             font-weight: 600;
         }
 
-        /* Итоговый блок (текстовый, выровнен вправо) */
         .total-section {
-            text-align: right;
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
             margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 2px solid var(--border);
-            font-size: 1.1rem;
-            line-height: 1.6;
+            border: 1px solid var(--border);
+            text-align: right;
         }
-        .total-line {
-            margin-bottom: 0.5rem;
-            color: var(--text);
+        .total-row {
+            display: flex;
+            justify-content: flex-end; /* Выравнивание вправо */
+            gap: 2rem;
+            padding: 0.5rem 0;
+            font-size: 1rem;
         }
-        .total-line.main {
-            font-size: 1.4rem;
+        .total-row.grand {
+            font-size: 1.25rem;
             font-weight: 700;
             color: var(--primary);
-            margin-top: 1rem;
-            margin-bottom: 0.2rem;
+            border-top: 2px solid var(--border);
+            margin-top: 0.5rem;
+            padding-top: 1rem;
         }
-        .total-line.sub {
-            font-size: 1.1rem;
+        .total-sub {
             color: var(--text-light);
-            margin-top: 0.2rem;
-        }
-        .total-value {
-            display: inline-block;
-            width: 140px;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: normal;
         }
 
         .hidden { display: none; }
@@ -301,13 +298,13 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Дата осмотра</label>
-                <input type="date" value="2023-10-25">
+                <label>Плановый месяц</label>
+                <input type="month" id="planMonth">
             </div>
         </div>
     </div>
 
-    <!-- Шаг 2: Дефектная ведомость -->
+    <!-- Шаг 2: Дефектная ведомость (Фильтруемый список) -->
     <div class="card hidden" id="defectsSection">
         <h2>2. Выявленные дефекты и мероприятия</h2>
         <p style="color: var(--text-light); margin-bottom: 1rem;">
@@ -332,13 +329,13 @@
             <thead>
                 <tr>
                     <th style="width: 5%">№</th>
-                    <th style="width: 35%">Наименование работ / Затрат</th>
+                    <th style="width: 30%">Наименование работ / Затрат</th>
                     <th style="width: 8%">Ед.</th>
                     <th style="width: 8%">Кол-во</th>
                     <th style="width: 12%">Трудозатраты<br><small>(чел-час)</small></th>
                     <th style="width: 12%">Механизмы<br><small>(маш-час)</small></th>
                     <th style="width: 15%">Стоимость (руб)</th>
-                    <th style="width: 5%"></th>
+                    <th style="width: 10%"></th>
                 </tr>
             </thead>
             <tbody id="estimateBody">
@@ -346,24 +343,26 @@
             </tbody>
         </table>
 
-        <!-- Итоговый блок (Текст, выровнен вправо) -->
-        <div class="total-section" id="totalSection" style="display:none;">
-            <div class="total-line">
-                Трудозатраты: <span class="total-value" id="totalLabor">0</span> чел-час
+        <div class="total-section">
+            <div class="total-row">
+                <span>Суммарные трудозатраты:</span>
+                <span id="totalLabor">0</span> чел-час
             </div>
-            <div class="total-line">
-                Работа механизмов: <span class="total-value" id="totalMech">0</span> маш-час
+            <div class="total-row">
+                <span>Работа механизмов:</span>
+                <span id="totalMech">0</span> маш-час
             </div>
-            
-            <div class="total-line main">
-                Итого по смете: <span class="total-value" id="grandTotal">0</span> руб.
+            <div class="total-row grand">
+                <span>Итого по смете:</span>
+                <span id="grandTotal">0</span> руб.
             </div>
-            
-            <div class="total-line sub">
-                в т.ч. работы: <span class="total-value" id="totalWorkCost">0</span> руб.
+            <div class="total-row total-sub">
+                <span>в т.ч. работы:</span>
+                <span id="totalWorkCost">0</span> руб.
             </div>
-            <div class="total-line sub">
-                в т.ч. материалы: <span class="total-value" id="totalMatCost">0</span> руб.
+            <div class="total-row total-sub">
+                <span>в т.ч. материалы:</span>
+                <span id="totalMatCost">0</span> руб.
             </div>
         </div>
     </div>
@@ -502,6 +501,14 @@
     // Состояние приложения
     let currentEstimate = []; 
     let editingItemId = null; 
+
+    // Установка даты по умолчанию (следующий год)
+    window.onload = function() {
+        const dateInput = document.getElementById('planMonth');
+        const now = new Date();
+        const nextYear = now.getFullYear() + 1;
+        dateInput.value = `${nextYear}-01`;
+    };
 
     // --- ЛОГИКА ОТРИСОВКИ СПИСКА ДЕФЕКТОВ ---
 
@@ -733,7 +740,6 @@
         const tbody = document.getElementById('estimateBody');
         const emptyMsg = document.getElementById('emptyEstimateMsg');
         const table = document.getElementById('estimateTable');
-        const totalSection = document.getElementById('totalSection');
         
         tbody.innerHTML = '';
         
@@ -746,11 +752,11 @@
         if (currentEstimate.length === 0) {
             emptyMsg.style.display = 'block';
             table.style.display = 'none';
-            totalSection.style.display = 'none';
+            document.querySelector('.total-section').style.display = 'none';
         } else {
             emptyMsg.style.display = 'none';
             table.style.display = 'table';
-            totalSection.style.display = 'block';
+            document.querySelector('.total-section').style.display = 'block';
         }
 
         currentEstimate.forEach((item, index) => {
