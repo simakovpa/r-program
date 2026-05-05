@@ -109,6 +109,9 @@
 
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
         .btn-outline:hover { background: var(--bg); border-color: var(--secondary); }
+        
+        .btn-info { background: #0ea5e9; color: white; }
+        .btn-info:hover { background: #0284c7; }
 
         .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
         .btn-icon { padding: 0.4rem; }
@@ -196,7 +199,7 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
         .checkbox-group {
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             border: 1px solid var(--border);
             padding: 0.5rem;
@@ -206,11 +209,19 @@
         .checkbox-item {
             display: flex;
             align-items: center;
-            padding: 0.4rem;
+            padding: 0.6rem;
             cursor: pointer;
+            border-radius: 4px;
         }
         .checkbox-item:hover { background: #f1f5f9; }
-        .checkbox-item input { margin-right: 0.8rem; }
+        .checkbox-item input { margin-right: 0.8rem; transform: scale(1.2); }
+        
+        .loc-tag-in-estimate {
+            color: var(--success);
+            font-weight: bold;
+            margin-left: auto;
+            font-size: 0.8rem;
+        }
 
         /* Material Editor Specifics */
         .mat-editor-row {
@@ -232,33 +243,35 @@
             font-weight: 600;
         }
 
-        .total-section {
-            background: #f8fafc;
-            padding: 1.5rem;
-            border-radius: 8px;
+        /* Totals Section */
+        .totals-container {
             margin-top: 2rem;
-            border: 1px solid var(--border);
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--border);
             text-align: right;
         }
         .total-row {
-            display: flex;
-            justify-content: flex-end; /* Выравнивание вправо */
-            gap: 2rem;
-            padding: 0.5rem 0;
+            margin-bottom: 0.5rem;
             font-size: 1rem;
+            color: var(--text);
         }
-        .total-row.grand {
+        .total-row.main {
             font-size: 1.25rem;
             font-weight: 700;
             color: var(--primary);
-            border-top: 2px solid var(--border);
-            margin-top: 0.5rem;
-            padding-top: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 0.2rem;
         }
-        .total-sub {
-            color: var(--text-light);
+        .total-row.sub {
             font-size: 1rem;
-            font-weight: normal;
+            color: var(--text-light);
+            margin-bottom: 0.2rem;
+        }
+        .total-value {
+            display: inline-block;
+            width: 150px;
+            text-align: right;
+            margin-left: 1rem;
         }
 
         .hidden { display: none; }
@@ -276,7 +289,7 @@
     <div class="container header-content">
         <h1>⚡ Локальный сметный расчет (ЛСР)</h1>
         <div>
-            <button class="btn btn-outline" onclick="alert('Черновик сохранен в локальное хранилище!')">💾 Сохранить</button>
+            <button class="btn btn-outline" onclick="alert('Черновик сохранен!')">💾 Сохранить</button>
             <button class="btn btn-primary" style="margin-left: 10px;" onclick="window.print()">🖨️ Печать</button>
         </div>
     </div>
@@ -284,7 +297,7 @@
 
 <div class="container">
     
-    <!-- Шаг 1: Общая информация и выбор объекта -->
+    <!-- Шаг 1: Общая информация -->
     <div class="card">
         <h2>1. Объект ремонта</h2>
         <div class="grid-2">
@@ -304,15 +317,14 @@
         </div>
     </div>
 
-    <!-- Шаг 2: Дефектная ведомость (Фильтруемый список) -->
+    <!-- Шаг 2: Дефектная ведомость -->
     <div class="card hidden" id="defectsSection">
         <h2>2. Выявленные дефекты и мероприятия</h2>
         <p style="color: var(--text-light); margin-bottom: 1rem;">
-            Выберите мероприятие для устранения дефекта. 
-            <br><small>✅ Добавленные полностью пункты скрываются. Частично добавленные показывают только оставшиеся места.</small>
+            Выберите мероприятие. Доступны только технические места, еще не включенные в смету.
         </p>
         <div id="defectsList">
-            <!-- Сюда будут генерироваться дефекты через JS -->
+            <!-- Генерация JS -->
         </div>
     </div>
 
@@ -335,7 +347,7 @@
                     <th style="width: 12%">Трудозатраты<br><small>(чел-час)</small></th>
                     <th style="width: 12%">Механизмы<br><small>(маш-час)</small></th>
                     <th style="width: 15%">Стоимость (руб)</th>
-                    <th style="width: 10%"></th>
+                    <th style="width: 10%">Действия</th>
                 </tr>
             </thead>
             <tbody id="estimateBody">
@@ -343,37 +355,40 @@
             </tbody>
         </table>
 
-        <div class="total-section">
+        <div class="totals-container">
             <div class="total-row">
-                <span>Суммарные трудозатраты:</span>
-                <span id="totalLabor">0</span> чел-час
+                <span>Трудозатраты:</span>
+                <span class="total-value"><span id="totalLabor">0</span> чел-час</span>
             </div>
             <div class="total-row">
-                <span>Работа механизмов:</span>
-                <span id="totalMech">0</span> маш-час
+                <span>Механизмы:</span>
+                <span class="total-value"><span id="totalMech">0</span> маш-час</span>
             </div>
-            <div class="total-row grand">
+            <div class="total-row main">
                 <span>Итого по смете:</span>
-                <span id="grandTotal">0</span> руб.
+                <span class="total-value"><span id="grandTotal">0</span> руб.</span>
             </div>
-            <div class="total-row total-sub">
+            <div class="total-row sub">
                 <span>в т.ч. работы:</span>
-                <span id="totalWorkCost">0</span> руб.
+                <span class="total-value"><span id="totalWorkCost">0</span> руб.</span>
             </div>
-            <div class="total-row total-sub">
+            <div class="total-row sub">
                 <span>в т.ч. материалы:</span>
-                <span id="totalMatCost">0</span> руб.
+                <span class="total-value"><span id="totalMatCost">0</span> руб.</span>
             </div>
         </div>
     </div>
 
 </div>
 
-<!-- Модальное окно выбора технических мест -->
+<!-- Модальное окно выбора/редактирования мест -->
 <div class="modal-overlay" id="locationModal">
     <div class="modal">
-        <h3>Выберите технические места</h3>
-        <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">Дефект обнаружен в нескольких местах. Выберите где применять мероприятие:</p>
+        <h3>Редактирование технических мест</h3>
+        <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">
+            Работа: <b id="locEditWorkName"></b><br>
+            Отметьте места, которые должны быть включены в эту позицию сметы.
+        </p>
         
         <div class="checkbox-group" id="modalCheckboxList">
             <!-- Чекбоксы -->
@@ -381,7 +396,7 @@
         
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1rem;">
             <button class="btn btn-outline" onclick="closeModal('locationModal')">Отмена</button>
-            <button class="btn btn-primary" id="confirmLocationBtn">Добавить выбранные</button>
+            <button class="btn btn-primary" id="confirmLocationBtn">Сохранить изменения</button>
         </div>
     </div>
 </div>
@@ -413,8 +428,7 @@
 </div>
 
 <script>
-    // --- ДАННЫЕ (Mock Data) ---
-    
+    // --- ДАННЫЕ ---
     const activitiesDB = {
         'act_transformer_oil': {
             name: 'Замена масла в трансформаторе',
@@ -461,57 +475,31 @@
 
     const defectsData = {
         'obj1': [
-            { 
-                id: 'd1', 
-                title: 'Ухудшение качества масла в Т-1', 
-                locations: ['Трансформатор Т-1'], 
-                defaultActivity: 'act_transformer_oil' 
-            },
-            { 
-                id: 'd2', 
-                title: 'Нагрев контактных соединений', 
-                locations: ['Выключатель ВВ-10 №1', 'Выключатель ВВ-10 №2', 'Разъединитель РЛНД-10'], 
-                defaultActivity: 'act_switch_clean' 
-            }
+            { id: 'd1', title: 'Ухудшение качества масла в Т-1', locations: ['Трансформатор Т-1'], defaultActivity: 'act_transformer_oil' },
+            { id: 'd2', title: 'Нагрев контактных соединений', locations: ['Выключатель ВВ-10 №1', 'Выключатель ВВ-10 №2', 'Разъединитель РЛНД-10'], defaultActivity: 'act_switch_clean' }
         ],
         'obj2': [
-            { 
-                id: 'd3', 
-                title: 'Бой изоляторов на опорах 12-15', 
-                locations: ['Опора №12', 'Опора №13', 'Опора №14', 'Опора №15'], 
-                defaultActivity: 'act_insulator_replace' 
-            },
-            { 
-                id: 'd4', 
-                title: 'Зарастание трассы ВЛ', 
-                locations: ['Участок км 0.0 - км 2.5'], 
-                defaultActivity: 'act_line_clear' 
-            }
+            { id: 'd3', title: 'Бой изоляторов на опорах 12-15', locations: ['Опора №12', 'Опора №13', 'Опора №14', 'Опора №15'], defaultActivity: 'act_insulator_replace' },
+            { id: 'd4', title: 'Зарастание трассы ВЛ', locations: ['Участок км 0.0 - км 2.5'], defaultActivity: 'act_line_clear' }
         ],
         'obj3': [
-             { 
-                id: 'd5', 
-                title: 'Коррозия корпуса РУ-0.4 кВ', 
-                locations: ['Ячейка ввода', 'Ячейка секционного'], 
-                defaultActivity: 'act_switch_clean'
-            }
+             { id: 'd5', title: 'Коррозия корпуса РУ-0.4 кВ', locations: ['Ячейка ввода', 'Ячейка секционного'], defaultActivity: 'act_switch_clean' }
         ]
     };
 
-    // Состояние приложения
-    let currentEstimate = []; 
-    let editingItemId = null; 
+    let currentEstimate = [];
+    let editingItemId = null;
+    let editingItemTempLocations = []; // Для хранения временного состояния при редактировании мест
 
-    // Установка даты по умолчанию (следующий год)
+    // Установка даты (следующий год)
     window.onload = function() {
-        const dateInput = document.getElementById('planMonth');
-        const now = new Date();
-        const nextYear = now.getFullYear() + 1;
-        dateInput.value = `${nextYear}-01`;
+        const date = new Date();
+        const nextYear = date.getFullYear() + 1;
+        const monthStr = (date.getMonth() + 1).toString().padStart(2, '0');
+        document.getElementById('planMonth').value = `${nextYear}-${monthStr}`;
     };
 
-    // --- ЛОГИКА ОТРИСОВКИ СПИСКА ДЕФЕКТОВ ---
-
+    // --- ОТРИСОВКА СПИСКА ДЕФЕКТОВ ---
     function loadDefects() {
         const objId = document.getElementById('objectSelect').value;
         const defectsContainer = document.getElementById('defectsList');
@@ -530,9 +518,8 @@
         estimateSection.classList.remove('hidden');
 
         const defects = defectsData[objId] || [];
-        
         if (defects.length === 0) {
-            defectsContainer.innerHTML = '<p>Дефектов для данного объекта не найдено.</p>';
+            defectsContainer.innerHTML = '<p>Дефектов не найдено.</p>';
             return;
         }
 
@@ -542,6 +529,7 @@
             const activityKey = document.getElementById(`activity-${defect.id}`) ? 
                                 document.getElementById(`activity-${defect.id}`).value : defect.defaultActivity;
             
+            // Находим все места, которые УЖЕ в смете для этой активности
             const occupiedLocations = new Set();
             currentEstimate.forEach(item => {
                 if (item.activityKey === activityKey) {
@@ -551,9 +539,7 @@
 
             const remainingLocations = defect.locations.filter(loc => !occupiedLocations.has(loc));
 
-            if (remainingLocations.length === 0) {
-                return; 
-            }
+            if (remainingLocations.length === 0) return; // Скрыть, если все добавлено
 
             hasVisibleDefects = true;
 
@@ -572,7 +558,7 @@
             const addedCount = totalLoc - remainingLocations.length;
             let statusInfo = '';
             if (addedCount > 0) {
-                statusInfo = `<div style="font-size:0.8rem; color:var(--success); margin-bottom:5px;">✅ Добавлено мест: ${addedCount} из ${totalLoc}</div>`;
+                statusInfo = `<div style="font-size:0.8rem; color:var(--success); margin-bottom:5px;">✅ В смете: ${addedCount} из ${totalLoc}</div>`;
             }
 
             const card = document.createElement('div');
@@ -582,15 +568,13 @@
                     <div style="width:100%">
                         ${statusInfo}
                         <div class="defect-title">${defect.title}</div>
-                        <div style="margin-top:4px;">
-                            ${locationsHtml}
-                        </div>
+                        <div style="margin-top:4px;">${locationsHtml}</div>
                     </div>
                 </div>
                 <div class="action-row">
                     <div style="flex-grow: 1;">
                         <label style="font-size: 0.8rem; margin-bottom: 2px;">Мероприятие:</label>
-                        <select id="activity-${defect.id}" onchange="updateDefectView('${defect.id}')">
+                        <select id="activity-${defect.id}" onchange="loadDefects()">
                             ${optionsHtml}
                         </select>
                     </div>
@@ -603,24 +587,18 @@
         });
 
         if (!hasVisibleDefects) {
-            defectsContainer.innerHTML = '<div class="empty-state">Все возможные мероприятия для этого объекта добавлены в смету.</div>';
+            defectsContainer.innerHTML = '<div class="empty-state">Все мероприятия добавлены в смету.</div>';
         }
         
         updateEstimateTable();
     }
 
-    function updateDefectView(defectId) {
-        loadDefects(); 
-    }
-
-    // --- ПОДГОТОВКА ДОБАВЛЕНИЯ ---
-
+    // --- ДОБАВЛЕНИЕ В СМЕТУ ---
     function prepareAddToEstimate(defectId) {
         const objId = document.getElementById('objectSelect').value;
         const defect = defectsData[objId].find(d => d.id === defectId);
         const activityKey = document.getElementById(`activity-${defect.id}`).value;
 
-        const activityName = activitiesDB[activityKey].name;
         const occupiedLocations = new Set();
         currentEstimate.forEach(item => {
             if (item.activityKey === activityKey) {
@@ -637,33 +615,30 @@
         if (availableLocations.length === 1) {
             addToEstimateLogic(activityKey, availableLocations);
         } else {
-            openLocationModal(availableLocations, activityKey);
+            openLocationModalForAdd(availableLocations, activityKey);
         }
     }
 
-    // --- МОДАЛЬНОЕ ОКНО МЕСТ ---
-    function openLocationModal(locations, activityKey) {
+    function openLocationModalForAdd(locations, activityKey) {
         const modal = document.getElementById('locationModal');
         const list = document.getElementById('modalCheckboxList');
         const confirmBtn = document.getElementById('confirmLocationBtn');
+        document.getElementById('locEditWorkName').innerText = activitiesDB[activityKey].name;
 
         list.innerHTML = '';
-
         const selectAllDiv = document.createElement('div');
         selectAllDiv.style.marginBottom = '10px';
         selectAllDiv.innerHTML = `<label class="checkbox-item"><input type="checkbox" id="selectAllLoc" onchange="toggleSelectAll(this)" checked> <b>Выбрать все (${locations.length})</b></label>`;
         list.appendChild(selectAllDiv);
 
-        locations.forEach((loc, index) => {
+        locations.forEach(loc => {
             const div = document.createElement('div');
             div.className = 'checkbox-item';
-            div.innerHTML = `
-                <input type="checkbox" class="loc-checkbox" value="${loc}" checked>
-                <span>${loc}</span>
-            `;
+            div.innerHTML = `<input type="checkbox" class="loc-checkbox" value="${loc}" checked><span>${loc}</span>`;
             list.appendChild(div);
         });
 
+        // Режим добавления
         confirmBtn.onclick = () => {
             const checkboxes = document.querySelectorAll('.loc-checkbox:checked');
             const selected = Array.from(checkboxes).map(cb => cb.value);
@@ -682,12 +657,6 @@
         const checkboxes = document.querySelectorAll('.loc-checkbox');
         checkboxes.forEach(cb => cb.checked = source.checked);
     }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    // --- ЛОГИКА СМЕТЫ ---
 
     function addToEstimateLogic(activityKey, locations) {
         const activity = activitiesDB[activityKey];
@@ -711,7 +680,7 @@
             mechTotal: activity.mechPerUnit * quantity,
             workCost: activity.basePrice * quantity,
             materials: materialsCopy,
-            locations: locations
+            locations: [...locations]
         };
 
         currentEstimate.push(newItem);
@@ -720,12 +689,115 @@
         document.getElementById('estimateSection').scrollIntoView({ behavior: 'smooth' });
     }
 
+    // --- РЕДАКТИРОВАНИЕ МЕСТ В СМЕТЕ ---
+    function openLocationEditor(itemId) {
+        const item = currentEstimate.find(i => i.id === itemId);
+        if (!item) return;
+
+        editingItemId = itemId;
+        document.getElementById('locEditWorkName').innerText = item.name;
+        
+        // Нам нужно найти ВСЕ возможные места для этой активности в текущем объекте
+        const objId = document.getElementById('objectSelect').value;
+        const allPossibleLocations = [];
+        
+        // Ищем во всех дефектах объекта, где используется эта активность
+        // (упрощенно: берем все локации из дефектов, у которых defaultActivity совпадает или выбранная активность совпадает)
+        // Для надежности прототипа: пройдемся по defectsData[objId] и соберем локации, где activityKey подходит
+        const defects = defectsData[objId] || [];
+        defects.forEach(d => {
+            // Проверяем, соответствует ли дефект текущей активности (по дефолту или по выбору пользователя в селекте, если он есть)
+            // Так как селект может быть изменен пользователем, но мы не храним связь дефект-активность в item,
+            // будем считать, что если мы редактируем item с activityKey, то потенциальные места - это все места из дефектов, 
+            // которые могли породить эту активность. 
+            // В рамках прототипа: просто собираем все локации из дефектов, у которых defaultActivity == item.activityKey
+            if (d.defaultActivity === item.activityKey) {
+                d.locations.forEach(l => {
+                    if (!allPossibleLocations.includes(l)) allPossibleLocations.push(l);
+                });
+            }
+        });
+
+        const modal = document.getElementById('locationModal');
+        const list = document.getElementById('modalCheckboxList');
+        const confirmBtn = document.getElementById('confirmLocationBtn');
+
+        list.innerHTML = '';
+        
+        // Сортируем: сначала выбранные, потом остальные
+        allPossibleLocations.sort((a, b) => {
+            const aIn = item.locations.includes(a);
+            const bIn = item.locations.includes(b);
+            if (aIn && !bIn) return -1;
+            if (!aIn && bIn) return 1;
+            return 0;
+        });
+
+        allPossibleLocations.forEach(loc => {
+            const isSelected = item.locations.includes(loc);
+            const div = document.createElement('div');
+            div.className = 'checkbox-item';
+            div.innerHTML = `
+                <input type="checkbox" class="loc-checkbox" value="${loc}" ${isSelected ? 'checked' : ''}>
+                <span>${loc}</span>
+                ${isSelected ? '<span class="loc-tag-in-estimate">✓ в смете</span>' : ''}
+            `;
+            list.appendChild(div);
+        });
+
+        confirmBtn.onclick = () => {
+            const checkboxes = document.querySelectorAll('.loc-checkbox:checked');
+            const selected = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (selected.length === 0) {
+                if(confirm('Вы убираете все места. Позиция будет удалена из сметы.')) {
+                    deleteEstimateItem(itemId);
+                    closeModal('locationModal');
+                }
+                return;
+            }
+
+            updateItemLocations(itemId, selected);
+            closeModal('locationModal');
+        };
+
+        modal.style.display = 'flex';
+    }
+
+    function updateItemLocations(itemId, newLocations) {
+        const item = currentEstimate.find(i => i.id === itemId);
+        if (!item) return;
+
+        const oldCount = item.locations.length;
+        const newCount = newLocations.length;
+        const ratio = newCount / oldCount;
+
+        item.locations = newLocations;
+        item.qty = newCount;
+        
+        // Пересчет
+        item.laborTotal = item.laborPerUnit * newCount;
+        item.mechTotal = item.mechPerUnit * newCount;
+        item.workCost = Math.round(item.workCost / oldCount) * newCount; // Грубый пересчет базы
+
+        // Пересчет материалов
+        item.materials.forEach(mat => {
+            // Восстанавливаем норму на 1 ед (делим на старое кол-во) и умножаем на новое
+            // Но у нас хранится totalQty. 
+            // Норма = totalQty / oldCount
+            const norm = mat.totalQty / oldCount;
+            mat.totalQty = norm * newCount;
+            mat.totalCost = mat.price * mat.totalQty;
+        });
+
+        loadDefects();
+        updateEstimateTable();
+    }
+
     function deleteEstimateItem(id) {
-        if(confirm('Удалить эту позицию из сметы?')) {
-            currentEstimate = currentEstimate.filter(item => item.id !== id);
-            loadDefects();
-            updateEstimateTable();
-        }
+        currentEstimate = currentEstimate.filter(item => item.id !== id);
+        loadDefects();
+        updateEstimateTable();
     }
 
     function clearEstimate() {
@@ -736,10 +808,16 @@
         }
     }
 
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // --- ОТРИСОВКА СМЕТЫ ---
     function updateEstimateTable() {
         const tbody = document.getElementById('estimateBody');
         const emptyMsg = document.getElementById('emptyEstimateMsg');
         const table = document.getElementById('estimateTable');
+        const totalsContainer = document.querySelector('.totals-container');
         
         tbody.innerHTML = '';
         
@@ -752,18 +830,18 @@
         if (currentEstimate.length === 0) {
             emptyMsg.style.display = 'block';
             table.style.display = 'none';
-            document.querySelector('.total-section').style.display = 'none';
+            totalsContainer.style.display = 'none';
         } else {
             emptyMsg.style.display = 'none';
             table.style.display = 'table';
-            document.querySelector('.total-section').style.display = 'block';
+            totalsContainer.style.display = 'block';
         }
 
         currentEstimate.forEach((item, index) => {
             let materialsHtml = '';
             let materialsCostSum = 0;
 
-            item.materials.forEach((mat, matIndex) => {
+            item.materials.forEach(mat => {
                 const cost = mat.price * mat.totalQty;
                 materialsCostSum += cost;
                 materialsHtml += `
@@ -786,7 +864,9 @@
                 <td>${index + 1}</td>
                 <td>
                     <div style="font-weight:600;">${item.name}</div>
-                    <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">Объекты: ${item.locations.join(', ')}</div>
+                    <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">
+                        Места: ${item.locations.join(', ')}
+                    </div>
                     ${materialsHtml ? `<div class="materials-list">${materialsHtml}</div>` : '<div style="font-size:0.8rem; color:#999; margin-top:4px;">Материалы не требуются</div>'}
                 </td>
                 <td>${item.unit}</td>
@@ -798,10 +878,13 @@
                     <div style="font-size:0.8rem; color:#16a34a;">Мат: ${materialsCostSum.toLocaleString()}</div>
                     <div style="font-weight:bold; border-top:1px solid #ddd; margin-top:6px; padding-top:4px;">${totalRowCost.toLocaleString()}</div>
                 </td>
-                <td style="text-align:right;">
-                    ${item.materials.length > 0 ? 
-                        `<button class="btn btn-outline btn-sm btn-icon" onclick="openMaterialEditor(${item.id})" title="Редактировать материалы">✏️</button>` : ''}
-                    <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEstimateItem(${item.id})" title="Удалить">🗑️</button>
+                <td style="text-align:right; vertical-align:middle;">
+                    <div style="display:flex; gap:4px; justify-content:flex-end;">
+                        <button class="btn btn-info btn-sm btn-icon" onclick="openLocationEditor(${item.id})" title="Изменить места">📍</button>
+                        ${item.materials.length > 0 ? 
+                            `<button class="btn btn-outline btn-sm btn-icon" onclick="openMaterialEditor(${item.id})" title="Редактировать материалы">✏️</button>` : ''}
+                        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEstimateItem(${item.id})" title="Удалить">🗑️</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -814,39 +897,29 @@
         document.getElementById('totalMatCost').innerText = totalMatCost.toLocaleString();
     }
 
-    // --- РЕДАКТОР МАТЕРИАЛОВ ---
-
+    // --- РЕДАКТОР МАТЕРИАЛОВ (без изменений логики, только вызов) ---
     function openMaterialEditor(itemId) {
         const item = currentEstimate.find(i => i.id === itemId);
         if (!item) return;
-
         editingItemId = itemId;
         document.getElementById('matEditWorkName').innerText = item.name;
-        
         renderMaterialEditorRows(item);
-
         document.getElementById('materialModal').style.display = 'flex';
     }
 
     function renderMaterialEditorRows(item) {
         const container = document.getElementById('matEditorList');
         container.innerHTML = '';
-
         item.materials.forEach((mat, index) => {
-            const row = createMaterialRowElement(mat, index, false);
-            container.appendChild(row);
+            container.appendChild(createMaterialRowElement(mat, index, false));
         });
     }
 
     function createMaterialRowElement(matData, index, isNew) {
         const div = document.createElement('div');
         div.className = 'mat-editor-row';
-        div.dataset.index = index;
-        
-        const nameVal = matData.name || '';
-        
         div.innerHTML = `
-            <input type="text" class="mat-name" value="${nameVal}" placeholder="Название материала">
+            <input type="text" class="mat-name" value="${matData.name || ''}" placeholder="Название">
             <input type="number" class="mat-qty" value="${matData.totalQty || 0}" step="0.01" min="0">
             <input type="text" class="mat-unit" value="${matData.unit || 'шт'}">
             <input type="number" class="mat-price" value="${matData.price || 0}" step="0.01" min="0">
@@ -856,39 +929,26 @@
     }
 
     function addNewMaterialRow() {
-        const container = document.getElementById('matEditorList');
-        const newRow = createMaterialRowElement({}, -1, true);
-        container.appendChild(newRow);
+        document.getElementById('matEditorList').appendChild(createMaterialRowElement({}, -1, true));
     }
 
     document.getElementById('saveMaterialsBtn').onclick = () => {
         if (!editingItemId) return;
-        
         const item = currentEstimate.find(i => i.id === editingItemId);
         if (!item) return;
 
         const rows = document.querySelectorAll('.mat-editor-row');
         const newMaterials = [];
-
         rows.forEach(row => {
             const name = row.querySelector('.mat-name').value.trim();
             const qty = parseFloat(row.querySelector('.mat-qty').value) || 0;
             const unit = row.querySelector('.mat-unit').value.trim();
             const price = parseFloat(row.querySelector('.mat-price').value) || 0;
-
             if (name) {
-                newMaterials.push({
-                    name: name,
-                    totalQty: qty,
-                    unit: unit,
-                    price: price,
-                    totalCost: qty * price
-                });
+                newMaterials.push({ name, totalQty: qty, unit, price, totalCost: qty * price });
             }
         });
-
         item.materials = newMaterials;
-        
         closeModal('materialModal');
         updateEstimateTable();
     };
@@ -898,7 +958,6 @@
             event.target.style.display = 'none';
         }
     }
-
 </script>
 
 </body>
